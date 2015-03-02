@@ -1,0 +1,15 @@
+# IP addresses and login credentials of
+# FRITZ! devices (e.g. FRITZ!Box or FRITZ!repeater)
+HM_FRITZ_IP="fritz.box fritz.repeater"
+HM_FRITZ_USER=<USERNAME>
+HM_FRITZ_SECRET=<PASSWORD>
+
+# IP address/hostname of CCU2
+HM_CCU_IP="homematic-ccu2.fritz.box"
+
+# MAC/IP addresses of user devices
+HM_USER_LIST=([john]=C9:85:51:8B:06:10 [jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:D5')
+
+# MAC/IP addresses of other known devices (all others will be
+# recognized as guest devices
+HM_KNOWN_LIST="BD:05:43:E7:49:EE C0:3A:D5:65:E7:E3 24:C9:D4:43:13:6F"
