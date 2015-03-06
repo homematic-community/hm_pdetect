@@ -25,6 +25,7 @@
 # Version history:
 # 0.1 (2015-03-02): initial release
 # 0.2 (2015-03-06): fixed bug in match for multiple user devices.
+# 0.3 (2015-03-06): fixed bug where user devices were identified as guest devices
 # 
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -136,8 +137,8 @@ retrieveFritzBoxDeviceList()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.1 - a FRITZ!-based homematic presence detection script"
-echo "(Mar 02 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.3 - a FRITZ!-based homematic presence detection script"
+echo "(Mar 06 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -174,6 +175,25 @@ for user in "${!HM_USER_LIST[@]}"; do
   else
     echo away
   fi
+
+  # remove checked user devices from deviceList so that
+  # they are not recognized as guest devices
+  for device in ${HM_USER_LIST[${user}]}; do
+    # try to match MAC address first
+    if [[ ${!deviceList[@]} =~ ${device} ]]; then
+      unset deviceList[${device}]
+    else
+      # now match the IP address list instead
+      if [[ ${deviceList[@]} =~ ${device} ]]; then
+        for dev in ${!deviceList[@]}; do
+          if [ ${deviceList[${dev}]} == ${device} ]; then
+            unset deviceList[${dev}]
+            break
+          fi
+        done
+      fi
+    fi
+  done
 
   # set status in homematic CCU
   createPresenceVariableOnCCUIfNeeded ${user}
