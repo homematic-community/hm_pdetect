@@ -24,6 +24,7 @@
 #
 # Version history:
 # 0.1 (2015-03-02): initial release
+# 0.2 (2015-03-06): fixed bug in match for multiple user devices.
 # 
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -155,12 +156,15 @@ for user in "${!HM_USER_LIST[@]}"; do
   echo -n "${user}: "
   stat="false"
 
+  # prepare the device list of the user as a regex
+  userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
+
   # try to match MAC address first
-  if [[ ${deviceList[@]} =~ ${HM_USER_LIST[${user}]} ]]; then
+  if [[ ${deviceList[@]} =~ ${userDeviceList} ]]; then
     stat="true"
   else
     # now match the IP address list instead
-    if [[ ${!deviceList[@]} =~ ${HM_USER_LIST[${user}]} ]]; then
+    if [[ ${!deviceList[@]} =~ ${userDeviceList} ]]; then
       stat="true"
     fi
   fi
