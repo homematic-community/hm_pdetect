@@ -7,8 +7,17 @@ HM_FRITZ_SECRET=<PASSWORD>
 # IP address/hostname of CCU2
 HM_CCU_IP="homematic-ccu2.fritz.box"
 
+# Name of a CCU variable we set for signaling general presence
+HM_CCU_PRESENCE_VAR="Anwesenheit"
+
+# used names within variables
+HM_CCU_PRESENCE_GUEST="Gast"
+HM_CCU_PRESENCE_NOBODY="Niemand"
+HM_CCU_PRESENCE_PRESENT="anwesend"
+HM_CCU_PRESENCE_AWAY="abwesend"
+
 # MAC/IP addresses of user devices
-HM_USER_LIST=([john]=C9:85:51:8B:06:10 [jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:D5')
+HM_USER_LIST=([John]=C9:85:51:8B:06:10 [Jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:D5')
 
 # MAC/IP addresses of other known devices (all others will be
 # recognized as guest devices

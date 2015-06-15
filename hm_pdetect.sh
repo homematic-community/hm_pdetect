@@ -26,6 +26,9 @@
 # 0.1 (2015-03-02): initial release
 # 0.2 (2015-03-06): fixed bug in match for multiple user devices.
 # 0.3 (2015-03-06): fixed bug where user devices were identified as guest devices
+# 0.4 (2015-06-15): added functionality to generate an additional enum list and
+#                   large general rework to have more stability fo querying and
+#                   setting CCU variables
 # 
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -33,6 +36,21 @@ NC="/bin/nc"
 
 #####################################################
 # Main script starts here, don't modify
+
+# default settings (overwritten by config file)
+HM_FRITZ_IP="fritz.box fritz.repeater"
+
+# IP address/hostname of CCU2
+HM_CCU_IP="homematic-ccu2.fritz.box"
+
+# Name of a CCU variable we set for signaling general presence
+HM_CCU_PRESENCE_VAR="Anwesenheit"
+
+# used names within variables
+HM_CCU_PRESENCE_GUEST="Gast"
+HM_CCU_PRESENCE_NOBODY="Niemand"
+HM_CCU_PRESENCE_PRESENT="anwesend"
+HM_CCU_PRESENCE_AWAY="abwesend"
 
 # declare all associative arrays first
 declare -A HM_USER_LIST   # username<>MAC/IP tuple
@@ -47,55 +65,100 @@ fi
 RETURN_FAILURE=1
 RETURN_SUCCESS=0
 
-# function querying and setting system variables
-# on a CCU
-getorsetpresenceVariableState()
+# function returning the current state of a homematic variable
+# and returning success/failure if the variable was found/not
+getVariableState()
 {
-  local name=$1
-  local setstate=$2
- 
-  if [ "${setstate}" != "" ]; then
+  local name="$1"
 
-    local currentstate=$(getorsetpresenceVariableState ${name})
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State()" | sed 's/.*<state>\(.*\)<\/state>.*/\1/')
 
-    if [ "${currentstate}" == "${setstate}" ]; then
-      echo -n "${currentstate}"
-      return $RETURN_SUCCESS
-    fi
+  if [ "${result}" != "null" ]; then
+    echo ${result}
+    return $RETURN_SUCCESS
+  else
+    return $RETURN_FAILURE
+  fi
+}
+
+# function setting the state of a homematic variable in case it
+# it different to the current state and the variable exists
+setVariableState()
+{
+  local name="$1"
+  local newstate="$2"
+
+  # before we going to set the variable state we
+  # query the current state and if the variable exists or not
+  curstate=$(getVariableState "${name}")
+  if [ $? -eq 1 ]; then
+    return $RETURN_FAILURE
   fi
 
-  local wgetreturn=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('presence.${name}').State(${setstate})" | egrep -o '<state>(false|true)</state></xml>$')
-
-  if [ "<state>true</state></xml>" == "$wgetreturn" ]; then
+  # only continue of the current state is different to the new state
+  if [ "${curstate}" == "${newstate}" ]; then
     return $RETURN_SUCCESS
   fi
-    
-  if [ "<state>false</state></xml>" == "$wgetreturn" ]; then
+
+  # the variable should be set to a new state, so lets do it
+  echo -n "Setting variable '${name}' to '${newstate}'... "
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})" | sed 's/.*<state>\(.*\)<\/state>.*/\1/')
+
+  # if setting the variable succeeded the result will be always
+  # 'true'
+  if [ "${result}" == "true" ]; then
+    echo "ok."
     return $RETURN_SUCCESS
   fi
 
+  echo "ERROR."
   return $RETURN_FAILURE
 }
 
 # function to check if a certain boolean system variable exists
 # at a CCU and if not creates it accordingly
-createPresenceVariableOnCCUIfNeeded()
+createVariable()
 {
-  local name=$1
+  local vaname=$1
+  local valist=$2
 
-  getorsetpresenceVariableState ${name} >/dev/null && return $RETURN_SUCCESS
+  # if the variable exists already, exit immediately!
+  getVariableState ${vaname} >/dev/null
+  if [ $? -eq 0 ]; then
+    return $RETURN_SUCCESS
+  fi
     
+  # if not we check if the 'nc' is present and if not we
+  # quit here since we can only create the variable using that tool
   if [ ! -f ${NC} ]
   then
-    echo "WARNING: ${NC} does not exist you need to create variable 'preseṅce.${name}' on CCU2 manually"
+    echo "WARNING: ${NC} does not exist. You need to create variable '${vaname}' on CCU2 manually"
     return $RETURN_FAILURE
   fi
     
-  local postbody="string name='${name}';string v='presence.${name}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(2);n.DPInfo(name#' is at home');n.ValueName1('anwesend');n.ValueName0('abwesend');n.State(false);dom.RTUpdate(0);}"
+  if [ -n "${valist}" ]; then
+    echo "Creating '${vaname}' (list) with values '${valist}'"
+    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('presence enum list');n.ValueList('${valist}');n.State(0);dom.RTUpdate(0);}"
+  else
+    echo "Creating '${vaname}' (bool)"
+    local name=$(echo ${vaname} | cut -d '.' -f2)
+    if [ "${name}" == "${vaname}" ]; then
+      name="general presence"
+    fi
+    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${name} @ home');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(0);}"
+  fi
+
   local postlength=$(echo "$postbody" | wc -c)
   echo -e "POST /tclrega.exe HTTP/1.0\r\nContent-Length: $postlength\r\n\r\n$postbody" | ${NC} "${HM_CCU_IP}" 80 >/dev/null 2>&1
 
-  getorsetpresenceVariableState ${name} >/dev/null
+  # check if the variable exists now and return an appropriate
+  # return value
+  getVariableState ${vaname} >/dev/null
+  if [ $? -eq 0 ]; then
+    return $RETURN_SUCCESS
+  else
+    return $RETURN_FAILURE
+  fi
 }
 
 # function that logs into a FRITZ! device and stores the MAC and IP address of all devices
@@ -133,12 +196,63 @@ retrieveFritzBoxDeviceList()
   done
 }
 
+# function that creats a list of tupels from an input string
+# of individual users. This tuple list can then be used to be set for the
+# presence.list variable type when constructing it
+createUserTupleList()
+{
+  local a="$1"
+
+  # constract the brace expansion string from the input
+  # string so that we end up with something like '{1,}{2,}{3,}', etc.
+  local b=""
+  local i=0
+  for Y in $a; do
+    ((i = i + 1))
+    b=$b{$i,}
+  done
+
+  # lets apply the brace expansion string and sort it
+  # according to numbers and not have it in the standard sorting
+  local c=$(for X in `eval echo\ $b;`; do echo $X; done | sort -n)
+
+  # lets construct tupels for every number (1-9) in
+  # the brace expansion
+  local tuples=""
+  for X in $c; do
+    if [ -n "${tuples}" ]; then
+      tuples="${tuples};"
+    fi
+    tuples="${tuples}`echo $X | fold -w1 | paste -sd\,  -`"
+  done
+
+  # now we replace each number (1-9) with the appropriate
+  # string of the input array
+  local i=0
+  for Z in ${a}; do
+    ((i = i + 1))
+    tuples=`echo ${tuples} | sed "s/${i}/${Z}/g"`
+  done
+
+  # now add Guest to each tuple
+  IFS=';'
+  local guestTuples="${HM_CCU_PRESENCE_GUEST}"
+  for U in ${tuples}; do
+    guestTuples="${guestTuples};${U},${HM_CCU_PRESENCE_GUEST}"
+  done
+  IFS=' '
+
+  tuples="${HM_CCU_PRESENCE_NOBODY};${tuples};${guestTuples}"
+
+  echo "${tuples}"
+}
+
 ################################################
 # main processing starts here
 #
 
-echo "hm_pdetect 0.3 - a FRITZ!-based homematic presence detection script"
-echo "(Mar 06 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.4 - a FRITZ!-based homematic presence detection script"
+echo "(Jun 15 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -152,9 +266,12 @@ done
 echo ", devices online: ${#deviceList[@]}."
 
 # lets identify user presence
-echo "setting user presence: "
+presence=0
+numusers=0
+echo "checking user presence: "
 for user in "${!HM_USER_LIST[@]}"; do
-  echo -n "${user}: "
+  ((numusers = numusers + 1))
+  echo -n "${user}[$numusers]: "
   stat="false"
 
   # prepare the device list of the user as a regex
@@ -172,6 +289,7 @@ for user in "${!HM_USER_LIST[@]}"; do
 
   if [ "${stat}" == "true" ]; then
     echo present
+    ((presence = presence + numusers))
   else
     echo away
   fi
@@ -196,8 +314,8 @@ for user in "${!HM_USER_LIST[@]}"; do
   done
 
   # set status in homematic CCU
-  createPresenceVariableOnCCUIfNeeded ${user}
-  getorsetpresenceVariableState ${user} ${stat}
+  createVariable ${HM_CCU_PRESENCE_VAR}.${user}
+  setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
 
 done
 
@@ -227,13 +345,31 @@ echo "${#deviceList[@]} guest devices found: ${!deviceList[@]}"
 
 # create/set presence system variable in CCU if guest devices
 # were found
-echo -n "guest: "
-createPresenceVariableOnCCUIfNeeded guest
+guestoffset=$((2**numusers))
+echo -n "${HM_CCU_PRESENCE_GUEST}[${guestoffset}]: "
+createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}
 if [ ${#deviceList[@]} -gt 0 ]; then
   # set status in homematic CCU
-  getorsetpresenceVariableState guest true
   echo present
+  setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
+  ((presence = presence + guestoffset))
 else
-  getorsetpresenceVariableState guest false
   echo away
+  setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
+fi
+
+# we set the global presence variable (if configured) to
+# the value of the user+guest combination
+userList="${!HM_USER_LIST[@]}"
+userTupleList=`createUserTupleList "${userList}"`
+createVariable ${HM_CCU_PRESENCE_VAR}.list ${userTupleList}
+setVariableState ${HM_CCU_PRESENCE_VAR}.list ${presence}
+
+# set the global presence variable to true/false depending
+# on the general presence of people in the house
+createVariable ${HM_CCU_PRESENCE_VAR}
+if [ ${presence} -gt 0 ]; then
+  setVariableState ${HM_CCU_PRESENCE_VAR} true
+else
+  setVariableState ${HM_CCU_PRESENCE_VAR} false
 fi
