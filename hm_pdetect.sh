@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # A FRITZ!-based Homematic presence detection script which can be regularly
 # executed (e.g. via cron on a separate Linux system) and remotely queries a FRITZ!
@@ -29,10 +29,10 @@
 # 0.4 (2015-06-15): added functionality to generate an additional enum list and
 #                   large general rework to have more stability fo querying and
 #                   setting CCU variables
-# 
+# 0.5 (2015-09-13): added dependency checks to make sure all required third-party
+#                   tools are installed and have proper versions.
 
 CONFIG_FILE="hm_pdetect.conf"
-NC="/bin/nc"
 
 #####################################################
 # Main script starts here, don't modify
@@ -52,18 +52,68 @@ HM_CCU_PRESENCE_NOBODY="Niemand"
 HM_CCU_PRESENCE_PRESENT="anwesend"
 HM_CCU_PRESENCE_AWAY="abwesend"
 
-# declare all associative arrays first
+# global return status variables
+RETURN_FAILURE=1
+RETURN_SUCCESS=0
+
+###############################
+# now we check all dependencies first. That means we
+# check that we have the right bash version and third-party tools
+# installed
+#
+
+# bash check
+if [ -z "${BASH_VERSION%%[^0-9]*}" ] || [ ${BASH_VERSION%%[^0-9]*} -lt 4 ]; then
+  echo "ERROR: this script requires a bash shell of version 4 or higher. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# wget check
+if [[ ! -x `which wget` ]]; then
+  echo "ERROR: 'wget' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# dirname check
+if [[ ! -x `which dirname` ]]; then
+  echo "ERROR: 'dirname' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# iconv check
+if [[ ! -x `which iconv` ]]; then
+  echo "ERROR: 'iconv' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# md5sum check
+if [[ ! -x `which md5sum` ]]; then
+  echo "ERROR: 'md5sum' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# awk check
+if [[ ! -x `which awk` ]]; then
+  echo "ERROR: 'awk' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# sed check
+if [[ ! -x `which sed` ]]; then
+  echo "ERROR: 'sed' tool missing. Please install."
+  exit ${RETURN_FAILURE}
+fi
+
+# declare all associative arrays first (bash v4+ required)
 declare -A HM_USER_LIST   # username<>MAC/IP tuple
 declare -A deviceList     # MAC<>IP tuple
 
+# lets source in the user defined config file
 if [ -e "$(dirname $0)/${CONFIG_FILE}" ]; then
   source "$(dirname $0)/${CONFIG_FILE}"
 else
-  echo "ERROR: config file ${CONFIG_FILE} doesn't exist"
+  echo "WARNING: config file ${CONFIG_FILE} doesn't exist. Using default values."
 fi
-
-RETURN_FAILURE=1
-RETURN_SUCCESS=0
 
 # function returning the current state of a homematic variable
 # and returning success/failure if the variable was found/not
@@ -130,9 +180,8 @@ createVariable()
     
   # if not we check if the 'nc' is present and if not we
   # quit here since we can only create the variable using that tool
-  if [ ! -f ${NC} ]
-  then
-    echo "WARNING: ${NC} does not exist. You need to create variable '${vaname}' on CCU2 manually"
+  if [[ ! -x `which nc` ]]; then
+    echo "WARNING: 'nc' (netcat) tool missing. You need to create variable '${vaname}' on CCU2 manually"
     return $RETURN_FAILURE
   fi
     
@@ -149,7 +198,7 @@ createVariable()
   fi
 
   local postlength=$(echo "$postbody" | wc -c)
-  echo -e "POST /tclrega.exe HTTP/1.0\r\nContent-Length: $postlength\r\n\r\n$postbody" | ${NC} "${HM_CCU_IP}" 80 >/dev/null 2>&1
+  echo -e "POST /tclrega.exe HTTP/1.0\r\nContent-Length: $postlength\r\n\r\n$postbody" | nc "${HM_CCU_IP}" 80 >/dev/null 2>&1
 
   # check if the variable exists now and return an appropriate
   # return value
@@ -251,8 +300,8 @@ createUserTupleList()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.4 - a FRITZ!-based homematic presence detection script"
-echo "(Jun 15 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.5 - a FRITZ!-based homematic presence detection script"
+echo "(Sep 13 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -373,3 +422,5 @@ if [ ${presence} -gt 0 ]; then
 else
   setVariableState ${HM_CCU_PRESENCE_VAR} false
 fi
+
+exit ${RETURN_SUCCESS}
