@@ -49,9 +49,8 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
    crontab -e
    ```
 
-  add/adapt this:
+  add these lines (replace < directory > with the path to the directory where you have copied hm_pdetect.sh to):
    ```
-   # run hm_pdetect.sh every minute and stuff all output to /dev/null
    */1 * * * * /<directory>/hm_pdetect.sh 2>&1 >/dev/null
    ```
 
