@@ -92,12 +92,6 @@ if [[ ! -x `which md5sum` ]]; then
   exit ${RETURN_FAILURE}
 fi
 
-# awk check
-if [[ ! -x `which awk` ]]; then
-  echo "ERROR: 'awk' tool missing. Please install."
-  exit ${RETURN_FAILURE}
-fi
-
 # sed check
 if [[ ! -x `which sed` ]]; then
   echo "ERROR: 'sed' tool missing. Please install."
@@ -223,7 +217,7 @@ retrieveFritzBoxDeviceList()
 
   # process login and hash it with our password
   local cpstr="${challenge}-${secret}"
-  local md5=$(echo -n ${cpstr} | iconv -f ISO8859-1 -t UTF-16LE | md5sum -b | awk '{print substr($0,1,32)}')
+  local md5=$(echo -n ${cpstr} | iconv -f ISO8859-1 -t UTF-16LE | md5sum -b | cut -d' ' -f1)
   local response="${challenge}-${md5}"
   local url_params="username=${user}&response=${response}"
   
