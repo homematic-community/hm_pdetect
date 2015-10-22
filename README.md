@@ -21,10 +21,14 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
 * [nc (netcat)](https://sourceforge.net/projects/netcat/)
 
 ## Installation
-1. Checkout this repository via
+1. Get the latest release as a .zip or tar.gz from:
+
+   https://github.com/jens-maus/hm_pdetect/releases
+
+   or directly checkout the latest development sources via git with the following command:
 
    ```
-   git checkout https://github.com/jens-maus/hm_pdetect.git
+   git clone https://github.com/jens-maus/hm_pdetect.git
    ```
 
 2. Copy sample config file to actual config file:
