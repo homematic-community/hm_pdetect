@@ -17,7 +17,6 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
 * [wget](http://www.gnu.org/software/wget/)
 * [iconv](https://www.gnu.org/software/libiconv/)
 * [md5sum](http://www.gnu.org/software/coreutils/coreutils.html)
-* [awk](https://www.gnu.org/software/gawk/)
 * [sed](https://www.gnu.org/software/sed/)
 * [nc (netcat)](https://sourceforge.net/projects/netcat/)
 
