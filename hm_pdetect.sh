@@ -31,6 +31,8 @@
 #                   setting CCU variables
 # 0.5 (2015-09-13): added dependency checks to make sure all required third-party
 #                   tools are installed and have proper versions.
+# 0.6 (2015-10-23): removed awk dependency and improved BASH version check
+#
 
 CONFIG_FILE="hm_pdetect.conf"
 
@@ -63,7 +65,7 @@ RETURN_SUCCESS=0
 #
 
 # bash check
-if [ -z "${BASH_VERSION%%[^0-9]*}" ] || [ ${BASH_VERSION%%[^0-9]*} -lt 4 ]; then
+if [[ `echo ${BASH_VERSION} | cut -d. -f1` -lt 4 ]]; then
   echo "ERROR: this script requires a bash shell of version 4 or higher. Please install."
   exit ${RETURN_FAILURE}
 fi
@@ -294,8 +296,8 @@ createUserTupleList()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.5 - a FRITZ!-based homematic presence detection script"
-echo "(Sep 13 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.6 - a FRITZ!-based homematic presence detection script"
+echo "(Oct 23 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
 echo
 
 
