@@ -65,37 +65,37 @@ RETURN_SUCCESS=0
 #
 
 # bash check
-if [[ `echo ${BASH_VERSION} | cut -d. -f1` -lt 4 ]]; then
+if [[ $(echo ${BASH_VERSION} | cut -d. -f1) -lt 4 ]]; then
   echo "ERROR: this script requires a bash shell of version 4 or higher. Please install."
   exit ${RETURN_FAILURE}
 fi
 
 # wget check
-if [[ ! -x `which wget` ]]; then
+if [[ ! -x $(which wget) ]]; then
   echo "ERROR: 'wget' tool missing. Please install."
   exit ${RETURN_FAILURE}
 fi
 
 # dirname check
-if [[ ! -x `which dirname` ]]; then
+if [[ ! -x $(which dirname) ]]; then
   echo "ERROR: 'dirname' tool missing. Please install."
   exit ${RETURN_FAILURE}
 fi
 
 # iconv check
-if [[ ! -x `which iconv` ]]; then
+if [[ ! -x $(which iconv) ]]; then
   echo "ERROR: 'iconv' tool missing. Please install."
   exit ${RETURN_FAILURE}
 fi
 
 # md5sum check
-if [[ ! -x `which md5sum` ]]; then
+if [[ ! -x $(which md5sum) ]]; then
   echo "ERROR: 'md5sum' tool missing. Please install."
   exit ${RETURN_FAILURE}
 fi
 
 # sed check
-if [[ ! -x `which sed` ]]; then
+if [[ ! -x $(which sed) ]]; then
   echo "ERROR: 'sed' tool missing. Please install."
   exit ${RETURN_FAILURE}
 fi
@@ -176,7 +176,7 @@ createVariable()
     
   # if not we check if the 'nc' is present and if not we
   # quit here since we can only create the variable using that tool
-  if [[ ! -x `which nc` ]]; then
+  if [[ ! -x $(which nc) ]]; then
     echo "WARNING: 'nc' (netcat) tool missing. You need to create variable '${vaname}' on CCU2 manually"
     return $RETURN_FAILURE
   fi
@@ -259,7 +259,7 @@ createUserTupleList()
 
   # lets apply the brace expansion string and sort it
   # according to numbers and not have it in the standard sorting
-  local c=$(for X in `eval echo\ $b;`; do echo $X; done | sort -n)
+  local c=$(for X in $(eval echo\ $b); do echo $X; done | sort -n)
 
   # lets construct tupels for every number (1-9) in
   # the brace expansion
@@ -268,7 +268,8 @@ createUserTupleList()
     if [ -n "${tuples}" ]; then
       tuples="${tuples};"
     fi
-    tuples="${tuples}`echo $X | fold -w1 | paste -sd\,  -`"
+    folded=$(echo ${X} | fold -w1)
+    tuples="${tuples}$(echo ${folded} | sed 's/ /,/g')"
   done
 
   # now we replace each number (1-9) with the appropriate
@@ -276,7 +277,7 @@ createUserTupleList()
   local i=0
   for Z in ${a}; do
     ((i = i + 1))
-    tuples=`echo ${tuples} | sed "s/${i}/${Z}/g"`
+    tuples=$(echo ${tuples} | sed "s/${i}/${Z}/g")
   done
 
   # now add Guest to each tuple
@@ -406,7 +407,7 @@ fi
 # we set the global presence variable (if configured) to
 # the value of the user+guest combination
 userList="${!HM_USER_LIST[@]}"
-userTupleList=`createUserTupleList "${userList}"`
+userTupleList=$(createUserTupleList "${userList}")
 createVariable ${HM_CCU_PRESENCE_VAR}.list ${userTupleList}
 setVariableState ${HM_CCU_PRESENCE_VAR}.list ${presence}
 
