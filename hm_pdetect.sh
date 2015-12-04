@@ -23,15 +23,16 @@
 # https://github.com/max2play/webinterface
 #
 # Version history:
-# 0.1 (2015-03-02): initial release
-# 0.2 (2015-03-06): fixed bug in match for multiple user devices.
-# 0.3 (2015-03-06): fixed bug where user devices were identified as guest devices
-# 0.4 (2015-06-15): added functionality to generate an additional enum list and
-#                   large general rework to have more stability fo querying and
-#                   setting CCU variables
-# 0.5 (2015-09-13): added dependency checks to make sure all required third-party
-#                   tools are installed and have proper versions.
-# 0.6 (2015-10-23): removed awk dependency and improved BASH version check
+# 0.1 (2015-03-02): - initial release
+# 0.2 (2015-03-06): - fixed bug in match for multiple user devices.
+# 0.3 (2015-03-06): - fixed bug where user devices were identified as guest devices
+# 0.4 (2015-06-15): - added functionality to generate an additional enum list and
+#                     large general rework to have more stability fo querying and
+#                     setting CCU variables
+# 0.5 (2015-09-13): - added dependency checks to make sure all required third-party
+#                     tools are installed and have proper versions.
+# 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
+#                   - changed the device query to use query.lua instead
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -229,11 +230,39 @@ retrieveFritzBoxDeviceList()
   # retrieve the network device list from the fritzbox and filter it
   # to show only the part between "uiLanActive" and "uiLanPassive" which should include all
   # currently connected devices.
-  local devices=$(wget -O - "http://${ip}/net/network_user_devices.lua?sid=${sid}" 2>/dev/null | grep uiLanActive | sed 's/.*uiLanActive\(.*\)uiLanPassive.*/\1/')
+  local devices=$(wget -O - "http://${ip}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)" 2>/dev/null)
 
-  # extract the mac addresses of devices being active
-  local maclist=($(echo ${devices} | egrep -o '>[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}<' | tr -d '><'))
-  local iplist=($(echo ${devices} | egrep -o '>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}<' | tr -d '><'))
+  #echo "devices: '${devices}'"
+
+  # prepare the regular expressions
+  re_name="\"name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  re_ip="\"ip\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  re_mac="\"mac\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  re_guest="\"guest\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  re_active="\"active\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+
+  maclist=()
+  iplist=()
+  while read -r line; do
+    # extract name
+    if [[ $line =~ $re_name ]]; then
+      name="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_ip ]]; then
+      ipaddr="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_mac ]]; then
+      mac="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_guest ]]; then
+      guest="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_active ]]; then
+      active="${BASH_REMATCH[1]}"
+
+      # only add 'active' devices
+      if [ ${active} -eq 1 ]; then
+        maclist+=(${mac})
+        iplist+=(${ipaddr})
+      fi
+    fi
+  done <<< "${devices}"
 
   # modify the global associative array
   for (( i = 0; i < ${#maclist[@]} ; i++ )); do
@@ -298,7 +327,7 @@ createUserTupleList()
 #
 
 echo "hm_pdetect 0.6 - a FRITZ!-based homematic presence detection script"
-echo "(Oct 23 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "(Dec 03 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
 echo
 
 
