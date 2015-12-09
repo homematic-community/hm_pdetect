@@ -16,9 +16,8 @@ Based on a device list specified in the config file (HM_USER_LIST) certain syste
 * HomeMatic CCU2
 * HomeMatic RaspberryMatic (beta)
 
-## Supported Fritz!Box devices
-* Fritz!Box 7490 (FRITZ!OS 6.30)
-* Fritz!Box 7390 (FRITZ!OS 6.30)
+## Supported FRITZ!OS versions
+* FRITZ!OS v6+
 
 ## Requirements
 To run hm_pdetect.sh the following tools have be installed on the Linux system using this script:
@@ -52,12 +51,9 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
    ```
    vi hm_pdetect.conf
    ```
+4. run hm_pdetect script and check your CCU for the system variables being properly added/modified.
 
-4. Login to your FRITZ!Box or FRITZ!repeater and enable the 'ExpertMode' settings so that MAC addresses are visible in the connected WLAN device list.
-
-5. run hm_pdetect script and check your CCU for the system variables being properly added/modified.
-
-6. create cronjob on your Linux/Unix system to reguarly call the script (e.g. every minute):
+5. create cronjob on your Linux/Unix system to reguarly call the script (e.g. every minute):
 
    ```
    crontab -e
@@ -68,7 +64,7 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
    */1 * * * * /<directory>/hm_pdetect.sh 2>&1 >/dev/null
    ```
 
-7. Enjoy and adapt your CCU scripts to recognize the presense.XXXX system variables changes for your various home automatisation purposes.
+6. Enjoy and adapt your CCU scripts to recognize the presense.XXXX system variables changes for your various home automatisation purposes.
 
 ## Note
 This script is based on similar functionality and combines the functionality of these projects into a single script:
