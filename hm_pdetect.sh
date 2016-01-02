@@ -14,7 +14,7 @@
 # guest device and the script will set a presence system variable for guests in the
 # CCU as well.
 #
-# Copyright (C) 2015 Jens Maus <mail@jens-maus.de>
+# Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>
 #
 # This script is based on similar functionality and combines the functionality of
 # these projects into a single script:
@@ -33,6 +33,7 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
+# 0.7 (2016-01-02): - device comparisons changed to be case insensitive.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -258,7 +259,7 @@ retrieveFritzBoxDeviceList()
 
       # only add 'active' devices
       if [ ${active} -eq 1 ]; then
-        maclist+=(${mac})
+        maclist+=(${mac^^}) # add uppercased mac address
         iplist+=(${ipaddr})
       fi
     fi
@@ -326,8 +327,8 @@ createUserTupleList()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.6 - a FRITZ!-based homematic presence detection script"
-echo "(Dec 03 2015) Copyright (C) 2015 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
+echo "(Jan 02 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -353,11 +354,11 @@ for user in "${!HM_USER_LIST[@]}"; do
   userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
 
   # try to match MAC address first
-  if [[ ${deviceList[@]} =~ ${userDeviceList} ]]; then
+  if [[ ${deviceList[@]} =~ ${userDeviceList^^} ]]; then
     stat="true"
   else
     # now match the IP address list instead
-    if [[ ${!deviceList[@]} =~ ${userDeviceList} ]]; then
+    if [[ ${!deviceList[@]} =~ ${userDeviceList^^} ]]; then
       stat="true"
     fi
   fi
@@ -373,13 +374,13 @@ for user in "${!HM_USER_LIST[@]}"; do
   # they are not recognized as guest devices
   for device in ${HM_USER_LIST[${user}]}; do
     # try to match MAC address first
-    if [[ ${!deviceList[@]} =~ ${device} ]]; then
-      unset deviceList[${device}]
+    if [[ ${!deviceList[@]} =~ ${device^^} ]]; then
+      unset deviceList[${device^^}]
     else
       # now match the IP address list instead
-      if [[ ${deviceList[@]} =~ ${device} ]]; then
+      if [[ ${deviceList[@]} =~ ${device^^} ]]; then
         for dev in ${!deviceList[@]}; do
-          if [ ${deviceList[${dev}]} == ${device} ]; then
+          if [ ${deviceList[${dev}]} == ${device^^} ]; then
             unset deviceList[${dev}]
             break
           fi
@@ -400,13 +401,13 @@ done
 for device in ${HM_KNOWN_LIST[@]}; do
 
   # try to match MAC address first
-  if [[ ${!deviceList[@]} =~ ${device} ]]; then
+  if [[ ${!deviceList[@]} =~ ${device^^} ]]; then
     unset deviceList[${device}]
   else
     # now match the IP address list instead
-    if [[ ${deviceList[@]} =~ ${device} ]]; then
+    if [[ ${deviceList[@]} =~ ${device^^} ]]; then
       for dev in ${!deviceList[@]}; do
-        if [ ${deviceList[${dev}]} == ${device} ]; then
+        if [ ${deviceList[${dev}]} == ${device^^} ]; then
           unset deviceList[${dev}]
           break
         fi
