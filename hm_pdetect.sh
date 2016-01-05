@@ -33,7 +33,9 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-02): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-05): - device comparisons changed to be case insensitive.
+#                   - an alternative config file can now be specified as a
+#                     commandline option
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -107,7 +109,9 @@ declare -A HM_USER_LIST   # username<>MAC/IP tuple
 declare -A deviceList     # MAC<>IP tuple
 
 # lets source in the user defined config file
-if [ -e "$(dirname $0)/${CONFIG_FILE}" ]; then
+if [ $# -gt 0 ]; then
+  source "$1"
+elif [ -e "$(dirname $0)/${CONFIG_FILE}" ]; then
   source "$(dirname $0)/${CONFIG_FILE}"
 else
   echo "WARNING: config file ${CONFIG_FILE} doesn't exist. Using default values."
