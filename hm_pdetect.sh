@@ -228,9 +228,9 @@ retrieveFritzBoxDeviceList()
   # send login request and retrieve SID return
   local sid=$(wget -O - "http://${ip}/login_sid.lua?${url_params}" 2>/dev/null | sed 's/.*<SID>\(.*\)<\/SID>.*/\1/')
  
-  # retrieve the network device list from the fritzbox and filter it
-  # to show only the part between "uiLanActive" and "uiLanPassive" which should include all
-  # currently connected devices.
+  # retrieve the network device list from the fritzbox using a
+  # specific call to query.lua so that we get our information without
+  # having to parse HTML portions.
   local devices=$(wget -O - "http://${ip}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)" 2>/dev/null)
 
   #echo "devices: '${devices}'"
