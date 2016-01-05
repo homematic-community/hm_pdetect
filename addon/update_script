@@ -17,8 +17,6 @@ mkdir -p ${ADDON_DIR}
 chmod 755 ${ADDON_DIR}
 mkdir -p ${RCD_DIR}
 chmod 755 ${RCD_DIR}
-mkdir -p ${WWW_DIR}
-chmod 755 ${WWW_DIR}
 
 # copy addon (common stuff)
 cp -af common/* ${ADDON_DIR}/
@@ -39,7 +37,8 @@ cp -af rc.d/* ${RCD_DIR}
 cp -af www ${ADDON_DIR}/
 ln -sf ${ADDON_DIR}/www ${WWW_DIR}
 
-# add menu
+# add menu entry
+touch /usr/local/etc/config/hm_addons.cfg
 ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/hm_pdetect-addon.cfg
 
 sync

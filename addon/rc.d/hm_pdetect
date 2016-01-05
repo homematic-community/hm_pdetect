@@ -17,10 +17,10 @@ case "$1" in
 
   info)
     VER=$(cat ${WWWDIR}/VERSION)
-    echo "Info: <b>HM Presence Detection CCU Addon</b><br>"
+    echo "Info: <b>FRITZ!-based Presence Detection Addon</b><br>"
     echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
     echo "Version: ${VER}"
-    echo "Name: HM_PDETECT"
+    echo "Name: hm_pdetect"
     echo "Operations: uninstall"
     echo "Update: /addons/${ADDONNAME}/update-check.cgi"
     ;;
@@ -28,6 +28,9 @@ case "$1" in
   uninstall)
     # remove all cronjob occurances regarding hm_pdetect
     (crontab -l) 2>&1 | grep -v "no crontab" | grep -v "${ADDONDIR}/run.sh" | sort | uniq | crontab -
+
+    # remove the addon button
+    ${ADDONDIR}/bin/update_addon hm_pdetect
 
     # remove the whole addon related stuff
     rm -rf ${ADDONDIR}
