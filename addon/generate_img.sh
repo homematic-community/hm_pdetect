@@ -11,15 +11,14 @@ cp -a update_script tmp/
 cp -a common tmp/
 cp -a rc.d tmp/
 cp -a www tmp/
+cp -a ../VERSION tmp/www/
 cp -a ccu1 tmp/
 cp -a ccu2 tmp/
 cp -a ccurm tmp/
-cp -a ../VERSION tmp/
 
 # copy hm_pdetect main script + config
 mkdir -p tmp/common/bin
 cp -a ../hm_pdetect.sh tmp/common/bin/
-cp -a ../hm_pdetect.conf.sample tmp/common/etc/hm_pdetect.conf
 
 # generate archive
 cd tmp
