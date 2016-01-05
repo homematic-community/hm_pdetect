@@ -1,0 +1,38 @@
+#!/bin/sh
+
+ADDONNAME=hm_pdetect
+ADDONDIR=/usr/local/addons/${ADDONNAME}
+WWWDIR=/usr/local/etc/config/addons/www/${ADDONNAME}
+RCDDIR=/usr/local/etc/config/rc.d
+
+case "$1" in
+
+  ""|start)
+    # add our cronjob definitions so that hm_pdetect is executed
+    # regularly.
+    if ! grep -Fq "${ADDONDIR}/run.sh" /usr/local/crontabs/root; then
+      (crontab -l ; echo "*/1 * * * * ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 15; ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 30; ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 45; ${ADDONDIR}/run.sh 2>&1 >/dev/null") 2>&1 | grep -v "no crontab" | sort | uniq | crontab -
+    fi
+    ;;
+
+  info)
+    VER=$(cat ${WWWDIR}/VERSION)
+    echo "Info: <b>HM Presence Detection CCU Addon</b><br>"
+    echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
+    echo "Version: ${VER}"
+    echo "Name: HM_PDETECT"
+    echo "Operations: uninstall"
+    echo "Update: /addons/${ADDONNAME}/update-check.cgi"
+    ;;
+
+  uninstall)
+    # remove all cronjob occurances regarding hm_pdetect
+    (crontab -l) 2>&1 | grep -v "no crontab" | grep -v "${ADDONDIR}/run.sh" | sort | uniq | crontab -
+
+    # remove the whole addon related stuff
+    rm -rf ${ADDONDIR}
+    rm -rf ${WWWDIR}
+    rm -f ${RCDDIR}/${ADDONNAME}
+    ;;
+
+esac
