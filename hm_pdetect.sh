@@ -33,9 +33,11 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-05): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-11): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
-#                     commandline option
+#                     commandline option.
+#                   - changed list variable to be of type 'string' to be more
+#                     flexible.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -129,6 +131,7 @@ getVariableState()
     echo ${result}
     return $RETURN_SUCCESS
   else
+    echo ${result}
     return $RETURN_FAILURE
   fi
 }
@@ -148,12 +151,12 @@ setVariableState()
   fi
 
   # only continue of the current state is different to the new state
-  if [ "${curstate}" == "${newstate}" ]; then
+  if [ "${curstate}" == ${newstate//\'} ]; then
     return $RETURN_SUCCESS
   fi
 
   # the variable should be set to a new state, so lets do it
-  echo -n "Setting variable '${name}' to '${newstate}'... "
+  echo -n "Setting variable '${name}' to '${newstate//\'}'... "
   local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})" | sed 's/.*<state>\(.*\)<\/state>.*/\1/')
 
   # if setting the variable succeeded the result will be always
@@ -172,7 +175,8 @@ setVariableState()
 createVariable()
 {
   local vaname=$1
-  local valist=$2
+  local vatype=$2
+  local valist=$3
 
   # if the variable exists already, exit immediately!
   getVariableState ${vaname} >/dev/null
@@ -187,16 +191,19 @@ createVariable()
     return $RETURN_FAILURE
   fi
     
-  if [ -n "${valist}" ]; then
-    echo "Creating '${vaname}' (list) with values '${valist}'"
-    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('presence enum list');n.ValueList('${valist}');n.State(0);dom.RTUpdate(0);}"
+  if [ "${vatype}" == "enum" ]; then
+    echo "Creating '${vaname}' (enum) with values '${valist}'"
+    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('presence enum list @ home');n.ValueList('${valist}');n.State(0);dom.RTUpdate(false);}"
+  elif [ "${vatype}" == "string" ]; then
+    echo "Creating '${vaname}' (string)"
+    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('presence list @ home');n.State('');dom.RTUpdate(false);}"
   else
     echo "Creating '${vaname}' (bool)"
     local name=$(echo ${vaname} | cut -d '.' -f2)
     if [ "${name}" == "${vaname}" ]; then
       name="general presence"
     fi
-    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${name} @ home');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(0);}"
+    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${name} @ home');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(false);}"
   fi
 
   local postlength=$(echo "$postbody" | wc -c)
@@ -332,7 +339,7 @@ createUserTupleList()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
-echo "(Jan 02 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 11 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -346,12 +353,10 @@ done
 echo ", devices online: ${#deviceList[@]}."
 
 # lets identify user presence
-presence=0
-numusers=0
+presenceList=""
 echo "checking user presence: "
 for user in "${!HM_USER_LIST[@]}"; do
-  ((numusers = numusers + 1))
-  echo -n "${user}[$numusers]: "
+  echo -n "${user}: "
   stat="false"
 
   # prepare the device list of the user as a regex
@@ -369,7 +374,10 @@ for user in "${!HM_USER_LIST[@]}"; do
 
   if [ "${stat}" == "true" ]; then
     echo present
-    ((presence = presence + numusers))
+    if [ -n "${presenceList}" ]; then
+      presenceList+=","
+    fi
+    presenceList+=${user}
   else
     echo away
   fi
@@ -394,7 +402,7 @@ for user in "${!HM_USER_LIST[@]}"; do
   done
 
   # set status in homematic CCU
-  createVariable ${HM_CCU_PRESENCE_VAR}.${user}
+  createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool
   setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
 
 done
@@ -425,14 +433,16 @@ echo "${#deviceList[@]} guest devices found: ${!deviceList[@]}"
 
 # create/set presence system variable in CCU if guest devices
 # were found
-guestoffset=$((2**numusers))
-echo -n "${HM_CCU_PRESENCE_GUEST}[${guestoffset}]: "
-createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}
+echo -n "${HM_CCU_PRESENCE_GUEST}: "
+createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
 if [ ${#deviceList[@]} -gt 0 ]; then
   # set status in homematic CCU
   echo present
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
-  ((presence = presence + guestoffset))
+  if [ -n "${presenceList}" ]; then
+    presenceList+=","
+  fi
+  presenceList+="${HM_CCU_PRESENCE_GUEST}"
 else
   echo away
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
@@ -442,13 +452,13 @@ fi
 # the value of the user+guest combination
 userList="${!HM_USER_LIST[@]}"
 userTupleList=$(createUserTupleList "${userList}")
-createVariable ${HM_CCU_PRESENCE_VAR}.list ${userTupleList}
-setVariableState ${HM_CCU_PRESENCE_VAR}.list ${presence}
+createVariable ${HM_CCU_PRESENCE_VAR}.list string
+setVariableState ${HM_CCU_PRESENCE_VAR}.list \'${presenceList}\'
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
-createVariable ${HM_CCU_PRESENCE_VAR}
-if [ ${presence} -gt 0 ]; then
+createVariable ${HM_CCU_PRESENCE_VAR} bool
+if [ -n "${presenceList}" ]; then
   setVariableState ${HM_CCU_PRESENCE_VAR} true
 else
   setVariableState ${HM_CCU_PRESENCE_VAR} false
