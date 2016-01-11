@@ -38,6 +38,8 @@
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
 #                     flexible.
+#                   - the enum variable is now called "Anwesenheit.enum" per
+#                     default and should be fixed compared to version 0.6.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -53,6 +55,8 @@ HM_CCU_IP="homematic-ccu2.fritz.box"
 
 # Name of a CCU variable we set for signaling general presence
 HM_CCU_PRESENCE_VAR="Anwesenheit"
+HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
+HM_CCU_PRESENCE_VAR_ENUM="${HM_CCU_PRESENCE_VAR}.enum"
 
 # used names within variables
 HM_CCU_PRESENCE_GUEST="Gast"
@@ -334,6 +338,29 @@ createUserTupleList()
   echo "${tuples}"
 }
 
+# function to count the position within the enum list
+# where the presence list matches
+whichEnumID()
+{
+  local enumList="$1"
+  local presenceList="$2"
+
+  # now we iterate through the ;—separated enumList
+  IFS=';'
+  local i=0
+  local result=0
+  for id in ${enumList}; do
+    if [ "${presenceList}" == "${id}" ]; then
+      result=$i
+      break
+    fi
+    ((i = i + 1 ))
+  done
+  IFS=' '
+
+  echo ${result}
+}
+
 ################################################
 # main processing starts here
 #
@@ -448,12 +475,24 @@ else
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
 fi
 
-# we set the global presence variable (if configured) to
-# the value of the user+guest combination
-userList="${!HM_USER_LIST[@]}"
-userTupleList=$(createUserTupleList "${userList}")
-createVariable ${HM_CCU_PRESENCE_VAR}.list string
-setVariableState ${HM_CCU_PRESENCE_VAR}.list \'${presenceList}\'
+# we create and set a global presence variable as a string
+# variable which users can query.
+if [ -n "${HM_CCU_PRESENCE_VAR_LIST}" ]; then
+  createVariable ${HM_CCU_PRESENCE_VAR}.list string
+  if [ -z "${presenceList}" ]; then
+    presenceList+="${HM_CCU_PRESENCE_NOBODY}"
+  fi
+  setVariableState ${HM_CCU_PRESENCE_VAR}.list \'${presenceList}\'
+fi
+
+# we create and set another global presence variable as an
+# enum of all possible presence combinations
+if [ -n "${HM_CCU_PRESENCE_VAR_ENUM}" ]; then
+  userList="${!HM_USER_LIST[@]}"
+  userTupleList=$(createUserTupleList "${userList}")
+  createVariable ${HM_CCU_PRESENCE_VAR}.enum enum ${userTupleList}
+  setVariableState ${HM_CCU_PRESENCE_VAR}.enum $(whichEnumID ${userTupleList} ${presenceList})
+fi
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
