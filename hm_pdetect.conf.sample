@@ -1,14 +1,16 @@
-# IP addresses and login credentials of
+# IP addresse/hostname and login credentials of
 # FRITZ! devices (e.g. FRITZ!Box or FRITZ!repeater)
 HM_FRITZ_IP="fritz.box fritz.repeater"
 HM_FRITZ_USER=<USERNAME>
 HM_FRITZ_SECRET=<PASSWORD>
 
-# IP address/hostname of CCU2
+# IP address/hostname of CCU device (CCU1, CCU2, RaspberryMatic)
 HM_CCU_IP="homematic-ccu2.fritz.box"
 
 # Name of a CCU variable we set for signaling general presence
 HM_CCU_PRESENCE_VAR="Anwesenheit"
+HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
+HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.string"
 
 # used names within variables
 HM_CCU_PRESENCE_GUEST="Gast"
