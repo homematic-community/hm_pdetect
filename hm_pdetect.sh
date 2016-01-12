@@ -33,13 +33,14 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-11): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-12): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
 #                     flexible.
 #                   - the enum variable is now called "Anwesenheit.enum" per
 #                     default and should be fixed compared to version 0.6.
+#                   - added login/password check for fritzbox login procedure.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -243,6 +244,13 @@ retrieveFritzBoxDeviceList()
   # send login request and retrieve SID return
   local sid=$(wget -O - "http://${ip}/login_sid.lua?${url_params}" 2>/dev/null | sed 's/.*<SID>\(.*\)<\/SID>.*/\1/')
  
+  # check if we got a valid SID
+  if [ -z "${sid}" ] || [ "${sid}" == "0000000000000000" ]; then
+    echo
+    echo "ERROR: username or password incorrect."
+    exit ${RETURN_FAILURE}
+  fi
+
   # retrieve the network device list from the fritzbox using a
   # specific call to query.lua so that we get our information without
   # having to parse HTML portions.
@@ -366,7 +374,7 @@ whichEnumID()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
-echo "(Jan 11 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 12 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
