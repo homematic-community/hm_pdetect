@@ -41,6 +41,10 @@
 #                   - the enum variable is now called "Anwesenheit.enum" per
 #                     default and should be fixed compared to version 0.6.
 #                   - added login/password check for fritzbox login procedure.
+#                   - introduced HM_KNOWN_LIST_MODE functionality to query guest
+#                     WiFi status of devices.
+#                   - connection to FRITZ! devices can now be performed with https://
+#                     protocol as well (have to be specified in HM_FRITZ_IP)
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -64,6 +68,18 @@ HM_CCU_PRESENCE_GUEST="Gast"
 HM_CCU_PRESENCE_NOBODY="Niemand"
 HM_CCU_PRESENCE_PRESENT="anwesend"
 HM_CCU_PRESENCE_AWAY="abwesend"
+
+# Specify mode of HM_KNOWN_LIST variable setting
+#
+# guest - apply known ignore list to devices in a dedicated
+#         guest WiFi only (requireѕ enabled guest WiFi in 
+#         FRITZ! device)
+# all   - apply known ignore list to all devices
+HM_KNOWN_LIST_MODE=guest
+
+# MAC/IP addresses of other known devices (all others will be
+# recognized as guest devices
+HM_KNOWN_LIST=""
 
 # global return status variables
 RETURN_FAILURE=1
@@ -112,8 +128,9 @@ if [[ ! -x $(which sed) ]]; then
 fi
 
 # declare all associative arrays first (bash v4+ required)
-declare -A HM_USER_LIST   # username<>MAC/IP tuple
-declare -A deviceList     # MAC<>IP tuple
+declare -A HM_USER_LIST     # username<>MAC/IP tuple
+declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
+declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
 
 # lets source in the user defined config file
 if [ $# -gt 0 ]; then
@@ -126,7 +143,7 @@ fi
 
 # function returning the current state of a homematic variable
 # and returning success/failure if the variable was found/not
-getVariableState()
+function getVariableState()
 {
   local name="$1"
 
@@ -143,7 +160,7 @@ getVariableState()
 
 # function setting the state of a homematic variable in case it
 # it different to the current state and the variable exists
-setVariableState()
+function setVariableState()
 {
   local name="$1"
   local newstate="$2"
@@ -177,7 +194,7 @@ setVariableState()
 
 # function to check if a certain boolean system variable exists
 # at a CCU and if not creates it accordingly
-createVariable()
+function createVariable()
 {
   local vaname=$1
   local vatype=$2
@@ -218,22 +235,30 @@ createVariable()
   # return value
   getVariableState ${vaname} >/dev/null
   if [ $? -eq 0 ]; then
-    return $RETURN_SUCCESS
+    return ${RETURN_SUCCESS}
   else
-    return $RETURN_FAILURE
+    return ${RETURN_FAILURE}
   fi
 }
 
 # function that logs into a FRITZ! device and stores the MAC and IP address of all devices
 # in an associative array which have to bre created before calling this function
-retrieveFritzBoxDeviceList()
+function retrieveFritzBoxDeviceList()
 {
   local ip=$1
   local user=$2
   local secret=$3
 
+  # check if "ip" starts with a "http(s)://" URL scheme
+  # identifier or if we have to add it ourself
+  if [[ ! ${ip} =~ ^http(s)?:\/\/ ]]; then
+    uri="http://${ip}"
+  else
+    uri=${ip}
+  fi
+
   # retrieve login challenge
-  local challenge=$(wget -O - "http://${ip}/login_sid.lua" 2>/dev/null | sed 's/.*<Challenge>\(.*\)<\/Challenge>.*/\1/')
+  local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua" | sed 's/.*<Challenge>\(.*\)<\/Challenge>.*/\1/')
 
   # process login and hash it with our password
   local cpstr="${challenge}-${secret}"
@@ -241,8 +266,8 @@ retrieveFritzBoxDeviceList()
   local response="${challenge}-${md5}"
   local url_params="username=${user}&response=${response}"
   
-  # send login request and retrieve SID return
-  local sid=$(wget -O - "http://${ip}/login_sid.lua?${url_params}" 2>/dev/null | sed 's/.*<SID>\(.*\)<\/SID>.*/\1/')
+  # send login request and retrieve SID
+  local sid=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}" | sed 's/.*<SID>\(.*\)<\/SID>.*/\1/')
  
   # check if we got a valid SID
   if [ -z "${sid}" ] || [ "${sid}" == "0000000000000000" ]; then
@@ -254,19 +279,28 @@ retrieveFritzBoxDeviceList()
   # retrieve the network device list from the fritzbox using a
   # specific call to query.lua so that we get our information without
   # having to parse HTML portions.
-  local devices=$(wget -O - "http://${ip}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)" 2>/dev/null)
+  local devices=$(wget -q -O - --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)")
 
   #echo "devices: '${devices}'"
 
   # prepare the regular expressions
-  re_name="\"name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  re_ip="\"ip\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  re_mac="\"mac\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  re_guest="\"guest\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  re_active="\"active\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_name="\"name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_ip="\"ip\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_mac="\"mac\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_guest="\"guest\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_active="\"active\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
 
-  maclist=()
-  iplist=()
+  local maclist_normal=()
+  local iplist_normal=()
+  local maclist_guest=()
+  local iplist_guest=()
+  local name=""
+  local ipaddr=""
+  local mac=""
+  local guest=0
+  local active=0
+
+  # parse the query.lua output
   while read -r line; do
     # extract name
     if [[ $line =~ $re_name ]]; then
@@ -282,22 +316,39 @@ retrieveFritzBoxDeviceList()
 
       # only add 'active' devices
       if [ ${active} -eq 1 ]; then
-        maclist+=(${mac^^}) # add uppercased mac address
-        iplist+=(${ipaddr})
+        if [ ${guest} -eq 1 ]; then
+          maclist_guest+=(${mac^^}) # add uppercased mac address
+          iplist_guest+=(${ipaddr})
+        else
+          maclist_normal+=(${mac^^}) # add uppercased mac address
+          iplist_normal+=(${ipaddr})
+        fi
       fi
+
+      # reset variables
+      name=""
+      ipaddr=""
+      mac=""
+      guest=0
+      active=0
     fi
   done <<< "${devices}"
 
-  # modify the global associative array
-  for (( i = 0; i < ${#maclist[@]} ; i++ )); do
-    deviceList[${maclist[$i]}]=${iplist[$i]}
+  # modify the global associative array for the normal-WiFi
+  for (( i = 0; i < ${#maclist_normal[@]} ; i++ )); do
+    normalDeviceList[${maclist_normal[$i]}]=${iplist_normal[$i]}
+  done
+
+  # modify the global associative array for the guest-WiFi
+  for (( i = 0; i < ${#maclist_guest[@]} ; i++ )); do
+    guestDeviceList[${maclist_guest[$i]}]=${iplist_guest[$i]}
   done
 }
 
-# function that creats a list of tupels from an input string
+# function that creates a list of tupels from an input string
 # of individual users. This tuple list can then be used to be set for the
 # presence.list variable type when constructing it
-createUserTupleList()
+function createUserTupleList()
 {
   local a="$1"
 
@@ -348,7 +399,7 @@ createUserTupleList()
 
 # function to count the position within the enum list
 # where the presence list matches
-whichEnumID()
+function whichEnumID()
 {
   local enumList="$1"
   local presenceList="$2"
@@ -374,37 +425,37 @@ whichEnumID()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
-echo "(Jan 12 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 17 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
 # lets retrieve all mac<>ip addresses of currently
 # active devices in our network
-echo -n "querying fritz devices:"
+echo -n "Querying FRITZ! devices:"
 for ip in ${HM_FRITZ_IP[@]}; do
   echo -n " ${ip}"
   retrieveFritzBoxDeviceList ${ip} ${HM_FRITZ_USER} ${HM_FRITZ_SECRET}
 done
-echo ", devices online: ${#deviceList[@]}."
+echo
+echo " Normal-WiFi devices active: ${#normalDeviceList[@]}"
+echo " Guest-WiFi devices active: ${#guestDeviceList[@]}"
 
 # lets identify user presence
 presenceList=""
-echo "checking user presence: "
+echo "Checking user presence: "
 for user in "${!HM_USER_LIST[@]}"; do
-  echo -n "${user}: "
+  echo -n " ${user}: "
   stat="false"
 
   # prepare the device list of the user as a regex
   userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
 
-  # try to match MAC address first
-  if [[ ${deviceList[@]} =~ ${userDeviceList^^} ]]; then
+  # match MAC address and IP address in normal and guest WiFi
+  if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} ]] || \
+     [[ ${guestDeviceList[@]}   =~ ${userDeviceList^^} ]] || \
+     [[ ${!normalDeviceList[@]} =~ ${userDeviceList^^} ]] || \
+     [[ ${!guestDeviceList[@]}  =~ ${userDeviceList^^} ]]; then
     stat="true"
-  else
-    # now match the IP address list instead
-    if [[ ${!deviceList[@]} =~ ${userDeviceList^^} ]]; then
-      stat="true"
-    fi
   fi
 
   if [ "${stat}" == "true" ]; then
@@ -421,14 +472,23 @@ for user in "${!HM_USER_LIST[@]}"; do
   # they are not recognized as guest devices
   for device in ${HM_USER_LIST[${user}]}; do
     # try to match MAC address first
-    if [[ ${!deviceList[@]} =~ ${device^^} ]]; then
-      unset deviceList[${device^^}]
+    if [[ ${!normalDeviceList[@]} =~ ${device^^} ]]; then
+      unset normalDeviceList[${device^^}]
+    elif [[ ${!guestDeviceList[@]} =~ ${device^^} ]]; then
+      unset guestDeviceList[${device^^}]
     else
       # now match the IP address list instead
-      if [[ ${deviceList[@]} =~ ${device^^} ]]; then
-        for dev in ${!deviceList[@]}; do
-          if [ ${deviceList[${dev}]} == ${device^^} ]; then
-            unset deviceList[${dev}]
+      if [[ ${normalDeviceList[@]} =~ ${device^^} ]]; then
+        for dev in ${!normalDeviceList[@]}; do
+          if [ ${normalDeviceList[${dev}]} == ${device^^} ]; then
+            unset normalDeviceList[${dev}]
+            break
+          fi
+        done
+      elif [[ ${guestDeviceList[@]} =~ ${device^^} ]]; then
+        for dev in ${!guestDeviceList[@]}; do
+          if [ ${guestDeviceList[${dev}]} == ${device^^} ]; then
+            unset guestDeviceList[${dev}]
             break
           fi
         done
@@ -442,20 +502,29 @@ for user in "${!HM_USER_LIST[@]}"; do
 
 done
 
-# lets identify guest presence by ruling out
-# devices in our list that are not listed in our HM_KNOWN_LIST
-# array
+# lets identify guests by checking the normal and guest
+# wifi device list and comparing them to the HM_KNOWN_LIST
+HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
 for device in ${HM_KNOWN_LIST[@]}; do
 
   # try to match MAC address first
-  if [[ ${!deviceList[@]} =~ ${device^^} ]]; then
-    unset deviceList[${device}]
+  if [[ ${!normalDeviceList[@]} =~ ${device} ]]; then
+    unset normalDeviceList[${device}]
+  elif [[ ${!guestDeviceList[@]} =~ ${device} ]]; then
+    unset guestDeviceList[${device}]
   else
     # now match the IP address list instead
-    if [[ ${deviceList[@]} =~ ${device^^} ]]; then
-      for dev in ${!deviceList[@]}; do
-        if [ ${deviceList[${dev}]} == ${device^^} ]; then
-          unset deviceList[${dev}]
+    if [[ ${normalDeviceList[@]} =~ ${device} ]]; then
+      for dev in ${!normalDeviceList[@]}; do
+        if [ ${normalDeviceList[${dev}]} == ${device} ]; then
+          unset normalDeviceList[${dev}]
+          break
+        fi
+      done
+    elif [[ ${guestDeviceList[@]} =~ ${device} ]]; then
+      for dev in ${!guestDeviceList[@]}; do
+        if [ ${guestDeviceList[${dev}]} == ${device} ]; then
+          unset guestDeviceList[${dev}]
           break
         fi
       done
@@ -464,22 +533,34 @@ for device in ${HM_KNOWN_LIST[@]}; do
 
 done
 
-echo "${#deviceList[@]} guest devices found: ${!deviceList[@]}"
+# depending on the HM_KNOWN_LIST_MODE mode we populate the guestList
+# with devices from the normalDeviceList and guestDeviceList or
+# just from the guestDeviceList
+guestList=()
+if [ ${HM_KNOWN_LIST_MODE} != "guest" ]; then
+  for device in ${!normalDeviceList[@]}; do
+    guestList+=(${device})
+  done
+fi
+for device in ${!guestDeviceList[@]}; do
+  guestList+=(${device})
+done
 
+echo "Checking guest presence: "
 # create/set presence system variable in CCU if guest devices
 # were found
-echo -n "${HM_CCU_PRESENCE_GUEST}: "
+echo -n " ${HM_CCU_PRESENCE_GUEST}: "
 createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
-if [ ${#deviceList[@]} -gt 0 ]; then
+if [ ${#guestList[@]} -gt 0 ]; then
   # set status in homematic CCU
-  echo present
+  echo "present - ${#guestList[@]} (${guestList[@]})"
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
   if [ -n "${presenceList}" ]; then
     presenceList+=","
   fi
   presenceList+="${HM_CCU_PRESENCE_GUEST}"
 else
-  echo away
+  echo "away"
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
 fi
 

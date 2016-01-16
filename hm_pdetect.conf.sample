@@ -21,6 +21,14 @@ HM_CCU_PRESENCE_AWAY="abwesend"
 # MAC/IP addresses of user devices
 HM_USER_LIST=([John]=C9:85:51:8B:06:10 [Jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:D5')
 
-# MAC/IP addresses of other known devices (all others will be
-# recognized as guest devices
+# Specify mode of HM_KNOWN_LIST variable setting
+#
+# guest - apply known ignore list to devices in a dedicated
+#         guest WiFi only (requireѕ enabled guest WiFi in 
+#         FRITZ! device)
+# all   - apply known ignore list to all devices
+HM_KNOWN_LIST_MODE=guest
+
+# MAC/IP addresses of known devices that should be ignored from
+# guest device recognition
 HM_KNOWN_LIST="BD:05:43:E7:49:EE C0:3A:D5:65:E7:E3 24:C9:D4:43:13:6F"
