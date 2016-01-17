@@ -25,7 +25,6 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
 * [wget](http://www.gnu.org/software/wget/)
 * [iconv](https://www.gnu.org/software/libiconv/)
 * [md5sum](http://www.gnu.org/software/coreutils/coreutils.html)
-* [sed](https://www.gnu.org/software/sed/)
 * [nc (netcat)](https://sourceforge.net/projects/netcat/)
 
 ## Installation
@@ -59,9 +58,12 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
    crontab -e
    ```
 
-  add these lines (replace < directory > with the path to the directory where you have copied hm_pdetect.sh to):
+  add the following lines (replace < directory > with the path to the directory where you have copied hm_pdetect.sh) to execute hm_pdetect automatically every 15 seconds.:
    ```
    */1 * * * * /<directory>/hm_pdetect.sh 2>&1 >/dev/null
+   */1 * * * * sleep 15; /<directory>/hm_pdetect.sh 2>&1 >/dev/null
+   */1 * * * * sleep 30; /<directory>/hm_pdetect.sh 2>&1 >/dev/null
+   */1 * * * * sleep 45; /<directory>/hm_pdetect.sh 2>&1 >/dev/null
    ```
 
 6. Enjoy and adapt your CCU scripts to recognize the presense.XXXX system variables changes for your various home automatisation purposes.
@@ -72,4 +74,4 @@ This script is based on similar functionality and combines the functionality of 
 * https://github.com/max2play/webinterface
 
 ## Author
-Copyright (C) 2015 Jens Maus <mail@jens-maus.de>
+Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>
