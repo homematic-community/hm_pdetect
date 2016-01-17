@@ -260,6 +260,13 @@ function retrieveFritzBoxDeviceList()
   # retrieve login challenge
   local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua" | sed 's/.*<Challenge>\(.*\)<\/Challenge>.*/\1/')
 
+  # check if we got a valid challange response
+  if [ -z "${challenge}" ];  then
+    echo
+    echo "ERROR: could not connect to ${uri}. Please check hostname/ip or URI."
+    exit ${RETURN_FAILURE}
+  fi
+
   # process login and hash it with our password
   local cpstr="${challenge}-${secret}"
   local md5=$(echo -n ${cpstr} | iconv -f ISO8859-1 -t UTF-16LE | md5sum -b | cut -d' ' -f1)
