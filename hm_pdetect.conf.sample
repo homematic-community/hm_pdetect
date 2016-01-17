@@ -1,8 +1,8 @@
-# IP addresse/hostname and login credentials of
+# IP address/hostname or https:// URI and login credentials of
 # FRITZ! devices (e.g. FRITZ!Box or FRITZ!repeater)
 HM_FRITZ_IP="fritz.box fritz.repeater"
-HM_FRITZ_USER=<USERNAME>
-HM_FRITZ_SECRET=<PASSWORD>
+HM_FRITZ_USER=
+HM_FRITZ_SECRET=
 
 # IP address/hostname of CCU device (CCU1, CCU2, RaspberryMatic)
 HM_CCU_IP="homematic-ccu2.fritz.box"
