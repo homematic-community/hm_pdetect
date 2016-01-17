@@ -33,7 +33,7 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-12): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-17): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
@@ -45,6 +45,8 @@
 #                     WiFi status of devices.
 #                   - connection to FRITZ! devices can now be performed with https://
 #                     protocol as well (have to be specified in HM_FRITZ_IP)
+#                   - replaced 'sed' tool dependency by replacing all uses with
+#                     equivalent bash regexp statements.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -121,12 +123,6 @@ if [[ ! -x $(which md5sum) ]]; then
   exit ${RETURN_FAILURE}
 fi
 
-# sed check
-if [[ ! -x $(which sed) ]]; then
-  echo "ERROR: 'sed' tool missing. Please install."
-  exit ${RETURN_FAILURE}
-fi
-
 # declare all associative arrays first (bash v4+ required)
 declare -A HM_USER_LIST     # username<>MAC/IP tuple
 declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
@@ -147,15 +143,17 @@ function getVariableState()
 {
   local name="$1"
 
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State()" | sed 's/.*<state>\(.*\)<\/state>.*/\1/')
-
-  if [ "${result}" != "null" ]; then
-    echo ${result}
-    return $RETURN_SUCCESS
-  else
-    echo ${result}
-    return $RETURN_FAILURE
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State()")
+  if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
+    result="${BASH_REMATCH[1]}"
+    if [ "${result}" != "null" ]; then
+      echo ${result}
+      return ${RETURN_SUCCESS}
+    fi
   fi
+
+  echo ${result}
+  return ${RETURN_FAILURE}
 }
 
 # function setting the state of a homematic variable in case it
@@ -169,27 +167,32 @@ function setVariableState()
   # query the current state and if the variable exists or not
   curstate=$(getVariableState "${name}")
   if [ $? -eq 1 ]; then
-    return $RETURN_FAILURE
+    return ${RETURN_FAILURE}
   fi
 
   # only continue of the current state is different to the new state
   if [ "${curstate}" == ${newstate//\'} ]; then
-    return $RETURN_SUCCESS
+    return ${RETURN_SUCCESS}
   fi
 
   # the variable should be set to a new state, so lets do it
   echo -n "Setting variable '${name}' to '${newstate//\'}'... "
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})" | sed 's/.*<state>\(.*\)<\/state>.*/\1/')
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})")
+  if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
+    result="${BASH_REMATCH[1]}"
+  else
+    result=""
+  fi
 
   # if setting the variable succeeded the result will be always
   # 'true'
   if [ "${result}" == "true" ]; then
     echo "ok."
-    return $RETURN_SUCCESS
+    return ${RETURN_SUCCESS}
   fi
 
   echo "ERROR."
-  return $RETURN_FAILURE
+  return ${RETURN_FAILURE}
 }
 
 # function to check if a certain boolean system variable exists
@@ -203,14 +206,14 @@ function createVariable()
   # if the variable exists already, exit immediately!
   getVariableState ${vaname} >/dev/null
   if [ $? -eq 0 ]; then
-    return $RETURN_SUCCESS
+    return ${RETURN_SUCCESS}
   fi
     
   # if not we check if the 'nc' is present and if not we
   # quit here since we can only create the variable using that tool
   if [[ ! -x $(which nc) ]]; then
     echo "WARNING: 'nc' (netcat) tool missing. You need to create variable '${vaname}' on CCU2 manually"
-    return $RETURN_FAILURE
+    return ${RETURN_FAILURE}
   fi
     
   if [ "${vatype}" == "enum" ]; then
@@ -258,10 +261,15 @@ function retrieveFritzBoxDeviceList()
   fi
 
   # retrieve login challenge
-  local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua" | sed 's/.*<Challenge>\(.*\)<\/Challenge>.*/\1/')
+  local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua")
+  if [[ ${challenge} =~ \<Challenge\>(.*)\</Challenge\> ]]; then
+    challenge="${BASH_REMATCH[1]}"
+  else
+    challenge=""
+  fi
 
-  # check if we got a valid challange response
-  if [ -z "${challenge}" ];  then
+  # check if we retrieved a valid challenge
+  if [[ -z "${challenge}" ]]; then
     echo
     echo "ERROR: could not connect to ${uri}. Please check hostname/ip or URI."
     exit ${RETURN_FAILURE}
@@ -274,7 +282,12 @@ function retrieveFritzBoxDeviceList()
   local url_params="username=${user}&response=${response}"
   
   # send login request and retrieve SID
-  local sid=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}" | sed 's/.*<SID>\(.*\)<\/SID>.*/\1/')
+  local sid=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}")
+  if [[ ${sid} =~ \<SID\>(.*)\</SID\> ]]; then
+    sid="${BASH_REMATCH[1]}"
+  else
+    sid=""
+  fi
  
   # check if we got a valid SID
   if [ -z "${sid}" ] || [ "${sid}" == "0000000000000000" ]; then
@@ -380,7 +393,7 @@ function createUserTupleList()
       tuples="${tuples};"
     fi
     folded=$(echo ${X} | fold -w1)
-    tuples="${tuples}$(echo ${folded} | sed 's/ /,/g')"
+    tuples="${tuples}$(echo ${folded} | tr ' ' ',')"
   done
 
   # now we replace each number (1-9) with the appropriate
@@ -388,7 +401,7 @@ function createUserTupleList()
   local i=0
   for Z in ${a}; do
     ((i = i + 1))
-    tuples=$(echo ${tuples} | sed "s/${i}/${Z}/g")
+    tuples=${tuples//${i}/${Z}}
   done
 
   # now add Guest to each tuple
