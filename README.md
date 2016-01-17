@@ -58,7 +58,7 @@ To run hm_pdetect.sh the following tools have be installed on the Linux system u
    crontab -e
    ```
 
-  add the following lines (replace < directory > with the path to the directory where you have copied hm_pdetect.sh) to execute hm_pdetect automatically every 15 seconds.:
+  add the following lines (replace < directory > with the path to the directory where you have copied hm_pdetect.sh) to e.g. execute hm_pdetect automatically every 15 seconds:
    ```
    */1 * * * * /<directory>/hm_pdetect.sh 2>&1 >/dev/null
    */1 * * * * sleep 15; /<directory>/hm_pdetect.sh 2>&1 >/dev/null
