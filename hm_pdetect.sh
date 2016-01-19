@@ -592,16 +592,17 @@ fi
 if [ -n "${HM_CCU_PRESENCE_VAR_STR}" ]; then
   createVariable ${HM_CCU_PRESENCE_VAR_STR} string
   if [ -z "${presenceList}" ]; then
-    presenceList+="${HM_CCU_PRESENCE_NOBODY}"
+    userList="${HM_CCU_PRESENCE_NOBODY}"
+  else
+    userList="${presenceList}"
   fi
-  setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${presenceList}\'
+  setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${userList}\'
 fi
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
 createVariable ${HM_CCU_PRESENCE_VAR} bool
-if [[ -z ${presenceList} ]] || \
-   [[ ${presenceList} == ${HM_CCU_PRESENCE_NOBODY} ]]; then
+if [ -z "${presenceList}" ]; then
   setVariableState ${HM_CCU_PRESENCE_VAR} false
 else
   setVariableState ${HM_CCU_PRESENCE_VAR} true
