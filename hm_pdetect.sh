@@ -105,12 +105,6 @@ if [[ ! -x $(which wget) ]]; then
   exit ${RETURN_FAILURE}
 fi
 
-# dirname check
-if [[ ! -x $(which dirname) ]]; then
-  echo "ERROR: 'dirname' tool missing. Please install."
-  exit ${RETURN_FAILURE}
-fi
-
 # iconv check
 if [[ ! -x $(which iconv) ]]; then
   echo "ERROR: 'iconv' tool missing. Please install."
@@ -131,8 +125,8 @@ declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
 # lets source in the user defined config file
 if [ $# -gt 0 ]; then
   source "$1"
-elif [ -e "$(dirname $0)/${CONFIG_FILE}" ]; then
-  source "$(dirname $0)/${CONFIG_FILE}"
+elif [ -e "${0%/*}/${CONFIG_FILE}" ]; then
+  source "${0%/*}/${CONFIG_FILE}"
 else
   echo "WARNING: config file ${CONFIG_FILE} doesn't exist. Using default values."
 fi
@@ -605,11 +599,13 @@ fi
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
+echo ${presenceList}
 createVariable ${HM_CCU_PRESENCE_VAR} bool
-if [ -n "${presenceList}" ]; then
-  setVariableState ${HM_CCU_PRESENCE_VAR} true
-else
+if [[ -z ${presenceList} ]] || \
+   [[ ${presenceList} == ${HM_CCU_PRESENCE_NOBODY} ]]; then
   setVariableState ${HM_CCU_PRESENCE_VAR} false
+else
+  setVariableState ${HM_CCU_PRESENCE_VAR} true
 fi
 
 exit ${RETURN_SUCCESS}
