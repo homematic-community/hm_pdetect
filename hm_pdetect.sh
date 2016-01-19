@@ -33,7 +33,7 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-17): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-19): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
@@ -47,6 +47,7 @@
 #                     protocol as well (have to be specified in HM_FRITZ_IP)
 #                   - replaced 'sed' tool dependency by replacing all uses with
 #                     equivalent bash regexp statements.
+#                   - removed 'nc' tool dependency by using wget instead.
 #
 
 CONFIG_FILE="hm_pdetect.conf"
@@ -170,7 +171,7 @@ function setVariableState()
   fi
 
   # the variable should be set to a new state, so lets do it
-  echo -n "Setting variable '${name}' to '${newstate//\'}'... "
+  echo -n "  Setting CCU variable '${name}': '${newstate//\'}'... "
   local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
@@ -203,21 +204,15 @@ function createVariable()
     return ${RETURN_SUCCESS}
   fi
     
-  # if not we check if the 'nc' is present and if not we
-  # quit here since we can only create the variable using that tool
-  if [[ ! -x $(which nc) ]]; then
-    echo "WARNING: 'nc' (netcat) tool missing. You need to create variable '${vaname}' on CCU2 manually"
-    return ${RETURN_FAILURE}
-  fi
-    
+  echo -n "  Creating CCU variable '${vaname}' "
   if [ "${vatype}" == "enum" ]; then
-    echo "Creating '${vaname}' (enum) with values '${valist}'"
+    echo -n "(enum)... "
     local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('presence enum list @ home');n.ValueList('${valist}');n.State(0);dom.RTUpdate(false);}"
   elif [ "${vatype}" == "string" ]; then
-    echo "Creating '${vaname}' (string)"
+    echo -n "(string)... "
     local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('presence list @ home');n.State('');dom.RTUpdate(false);}"
   else
-    echo "Creating '${vaname}' (bool)"
+    echo -n "(bool)... "
     local name=$(echo ${vaname} | cut -d '.' -f2)
     if [ "${name}" == "${vaname}" ]; then
       name="general presence"
@@ -225,15 +220,13 @@ function createVariable()
     local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${name} @ home');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(false);}"
   fi
 
-  local postlength=$(echo "$postbody" | wc -c)
-  echo -e "POST /tclrega.exe HTTP/1.0\r\nContent-Length: $postlength\r\n\r\n$postbody" | nc "${HM_CCU_IP}" 80 >/dev/null 2>&1
-
-  # check if the variable exists now and return an appropriate
-  # return value
-  getVariableState ${vaname} >/dev/null
-  if [ $? -eq 0 ]; then
+  # use wget to post the tcl script to tclrega.exe
+  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}/tclrega.exe")
+  if [[ ${result} =~ \<v\>${vaname}\</v\> ]]; then
+    echo "ok."
     return ${RETURN_SUCCESS}
   else
+    echo "ERROR: could not create system variable '${vaname}'."
     return ${RETURN_FAILURE}
   fi
 }
@@ -439,7 +432,7 @@ function whichEnumID()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
-echo "(Jan 17 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 19 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
@@ -564,10 +557,10 @@ echo "Checking guest presence: "
 # create/set presence system variable in CCU if guest devices
 # were found
 echo -n " ${HM_CCU_PRESENCE_GUEST}: "
-createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
 if [ ${#guestList[@]} -gt 0 ]; then
   # set status in homematic CCU
   echo "present - ${#guestList[@]} (${guestList[@]})"
+  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
   if [ -n "${presenceList}" ]; then
     presenceList+=","
@@ -575,6 +568,7 @@ if [ ${#guestList[@]} -gt 0 ]; then
   presenceList+="${HM_CCU_PRESENCE_GUEST}"
 else
   echo "away"
+  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
 fi
 
@@ -590,12 +584,12 @@ fi
 # we create and set a global presence variable as a string
 # variable which users can query.
 if [ -n "${HM_CCU_PRESENCE_VAR_STR}" ]; then
-  createVariable ${HM_CCU_PRESENCE_VAR_STR} string
   if [ -z "${presenceList}" ]; then
     userList="${HM_CCU_PRESENCE_NOBODY}"
   else
     userList="${presenceList}"
   fi
+  createVariable ${HM_CCU_PRESENCE_VAR_STR} string
   setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${userList}\'
 fi
 
