@@ -599,7 +599,6 @@ fi
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
-echo ${presenceList}
 createVariable ${HM_CCU_PRESENCE_VAR} bool
 if [[ -z ${presenceList} ]] || \
    [[ ${presenceList} == ${HM_CCU_PRESENCE_NOBODY} ]]; then
