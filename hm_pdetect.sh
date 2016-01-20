@@ -161,11 +161,11 @@ function setVariableState()
   # before we going to set the variable state we
   # query the current state and if the variable exists or not
   curstate=$(getVariableState "${name}")
-  if [ $? -eq 1 ]; then
+  if [ "${curstate}" == "null" ]; then
     return ${RETURN_FAILURE}
   fi
 
-  # only continue of the current state is different to the new state
+  # only continue if the current state is different to the new state
   if [ "${curstate}" == ${newstate//\'} ]; then
     return ${RETURN_SUCCESS}
   fi
@@ -196,28 +196,65 @@ function createVariable()
 {
   local vaname=$1
   local vatype=$2
-  local valist=$3
+  local comment=$3
+  local valist=$4
 
-  # if the variable exists already, exit immediately!
-  getVariableState ${vaname} >/dev/null
-  if [ $? -eq 0 ]; then
-    return ${RETURN_SUCCESS}
-  fi
-    
-  echo -n "  Creating CCU variable '${vaname}' "
+  # first we find out if the variable already exists and if
+  # the value name/list it contains matches the value name/list
+  # we are expecting
+  local postbody=""
   if [ "${vatype}" == "enum" ]; then
-    echo -n "(enum)... "
-    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('presence enum list @ home');n.ValueList('${valist}');n.State(0);dom.RTUpdate(false);}"
-  elif [ "${vatype}" == "string" ]; then
-    echo -n "(string)... "
-    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('presence list @ home');n.State('');dom.RTUpdate(false);}"
-  else
-    echo -n "(bool)... "
-    local name=$(echo ${vaname} | cut -d '.' -f2)
-    if [ "${name}" == "${vaname}" ]; then
-      name="general presence"
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueList=dom.GetObject('${vaname}').ValueList()")
+    if [[ ${result} =~ \<valueList\>(.*)\</valueList\> ]]; then
+      result="${BASH_REMATCH[1]}"
     fi
-    local postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${name} @ home');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(false);}"
+
+    # make sure result is not empty and not null
+    if [[ -n "${result}" ]] && \
+       [[ "${result}" != "null" ]]; then
+
+      if [[ ${result} != ${valist} ]]; then
+        echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
+        postbody="string v='${vaname}';dom.GetObject(v).ValueList('${valist}')"
+      fi
+    else
+      echo -n "  Creating CCU variable '${vaname}' (${vatype})... "
+      postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtInteger);n.ValueSubType(istEnum);n.DPInfo('${comment}');n.ValueList('${valist}');n.State(0);dom.RTUpdate(false);}"
+    fi
+  elif [ "${vatype}" == "string" ]; then
+    getVariableState "${vaname}" >/dev/null
+    if [ $? -eq 1 ]; then
+      echo -n "  Creating CCU variable '${vaname}' (${vatype})... "
+      postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('${comment}');n.State('');dom.RTUpdate(false);}"
+    fi
+  else
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueName0=dom.GetObject('${vaname}').ValueName0()&valueName1=dom.GetObject('${vaname}').ValueName1()")
+    local valueName0="null"
+    local valueName1="null"
+    if [[ ${result} =~ \<valueName0\>(.*)\</valueName0\>\<valueName1\>(.*)\</valueName1\> ]]; then
+      valueName0="${BASH_REMATCH[1]}"
+      valueName1="${BASH_REMATCH[2]}"
+    fi
+
+    # make sure result is not empty and not null
+    if [[ -n "${result}" ]] && \
+       [[ ${valueName0} != "null" ]] && [[ ${valueName1} != "null" ]]; then
+
+       if [[ ${valueName0} != ${HM_CCU_PRESENCE_AWAY} ]] || \
+          [[ ${valueName1} != ${HM_CCU_PRESENCE_PRESENT} ]]; then
+         echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
+         postbody="string v='${vaname}';dom.GetObject(v).ValueName0('${HM_CCU_PRESENCE_AWAY}');dom.GetObject(v).ValueName1('${HM_CCU_PRESENCE_PRESENT}')"
+       fi
+    else
+      echo -n "  Creating CCU variable '${vaname}' (${vatype})... "
+      postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtBinary);n.ValueSubType(istBool);n.DPInfo('${comment}');n.ValueName1('${HM_CCU_PRESENCE_PRESENT}');n.ValueName0('${HM_CCU_PRESENCE_AWAY}');n.State(false);dom.RTUpdate(false);}"
+    fi
+  fi
+
+  # if postbody is empty there is nothing to do
+  # and the variable exists with correct value name/list
+  if [[ -z "${postbody}" ]]; then
+    return ${RETURN_SUCCESS}
   fi
 
   # use wget to post the tcl script to tclrega.exe
@@ -504,7 +541,7 @@ for user in "${!HM_USER_LIST[@]}"; do
   done
 
   # set status in homematic CCU
-  createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool
+  createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool "${user} @ home"
   setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
 
 done
@@ -560,7 +597,7 @@ echo -n " ${HM_CCU_PRESENCE_GUEST}: "
 if [ ${#guestList[@]} -gt 0 ]; then
   # set status in homematic CCU
   echo "present - ${#guestList[@]} (${guestList[@]})"
-  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
+  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
   if [ -n "${presenceList}" ]; then
     presenceList+=","
@@ -568,7 +605,7 @@ if [ ${#guestList[@]} -gt 0 ]; then
   presenceList+="${HM_CCU_PRESENCE_GUEST}"
 else
   echo "away"
-  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool
+  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
   setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
 fi
 
@@ -577,7 +614,7 @@ fi
 if [ -n "${HM_CCU_PRESENCE_VAR_LIST}" ]; then
   userList="${!HM_USER_LIST[@]}"
   userTupleList=$(createUserTupleList "${userList}")
-  createVariable ${HM_CCU_PRESENCE_VAR_LIST} enum ${userTupleList}
+  createVariable ${HM_CCU_PRESENCE_VAR_LIST} enum "presence enum list @ home" ${userTupleList}
   setVariableState ${HM_CCU_PRESENCE_VAR_LIST} $(whichEnumID ${userTupleList} ${presenceList})
 fi
 
@@ -589,13 +626,13 @@ if [ -n "${HM_CCU_PRESENCE_VAR_STR}" ]; then
   else
     userList="${presenceList}"
   fi
-  createVariable ${HM_CCU_PRESENCE_VAR_STR} string
+  createVariable ${HM_CCU_PRESENCE_VAR_STR} string "presence list @ home"
   setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${userList}\'
 fi
 
 # set the global presence variable to true/false depending
 # on the general presence of people in the house
-createVariable ${HM_CCU_PRESENCE_VAR} bool
+createVariable ${HM_CCU_PRESENCE_VAR} bool "global presence @ home"
 if [ -z "${presenceList}" ]; then
   setVariableState ${HM_CCU_PRESENCE_VAR} false
 else
