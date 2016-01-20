@@ -33,7 +33,7 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-19): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-20): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
@@ -469,7 +469,7 @@ function whichEnumID()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
-echo "(Jan 19 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 20 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
