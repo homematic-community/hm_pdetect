@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# A FRITZ!-based Homematic presence detection script which can be regularly
+# A FRITZ!-based HomeMatic presence detection script which can be regularly
 # executed (e.g. via cron on a separate Linux system) and remotely queries a FRITZ!
 # device about the registered LAN/WLAN devices.
 #
@@ -468,7 +468,7 @@ function whichEnumID()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.7 - a FRITZ!-based homematic presence detection script"
+echo "hm_pdetect 0.7 - a FRITZ!-based HomeMatic presence detection script"
 echo "(Jan 20 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
