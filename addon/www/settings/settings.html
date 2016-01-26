@@ -13,7 +13,7 @@
 	<!-- Custom styles for this template -->
 	<link href="../public/css/custombootstrap.css" rel="stylesheet">
 	<link href="../public/css/custom.css" rel="stylesheet">
-<title>HM yowsup-Addon</title></head>
+<title>HM-pdetect Addon</title></head>
 <body  style="zoom: 1; margin-top: 60px;"> 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -33,71 +33,107 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="en.settings.cgi">English</a></li>
-        <li><a href="settings.cgi">Einstellungen</a></li>
+        <li><a href="settings.cgi">Konfiguration</a></li>
        </ul>        
      </div><!--/.nav-collapse -->
   </div><!-- class="container" -->
 </div><!-- class="navbar ..." -->
 <div class="container center1 col-md-8" id="content"> 
-<legend>HM yowsup-Addon - Einstellungen</legend>
+<legend>FRITZ!-basierte Anwesenheitserkennung - Konfiguration</legend>
 <div class="well well-s">
-<p class='lead'>Die ID bleibt eigentlich frei, die Bemerkungen spielen keine Rolle!</p>
 
 <form class='form-horizontal' name='f_edit' id='f_edit'  action="settings.cgi" method="get">
 <fieldset>
        
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="HM_FRITZ_IP" id="HM_FRITZ_IP-Label">FRITZ! Hostnamen</label>  
+  <label class="col-md-3 control-label" for="HM_FRITZ_IP" id="HM_FRITZ_IP-Label">FRITZ! Hostnamen/IPs:</label>
   <div class="col-md-4">
-  <input id="HM_FRITZ_IP" name="HM_FRITZ_IP" type="text" placeholder="z. B. 'fritz.box' f√ºr FRITZ!Box" class="form-control input-md" required="" value="<%HM_FRITZ_IP%>">
-  <span class="help-block helpcc"><%cc_note%></span>  
-  </div>
-  <div class="col-md-3">
-  <input id="cc_note" name="cc_note" type="text" placeholder="L√§nderkennung" class="form-control input-md" required="" value="<%cc_note%>">
-  <span class="help-block helpcc_note">Bemerkung</span>  
+  <input id="HM_FRITZ_IP" name="HM_FRITZ_IP" type="text" placeholder="z.B. 'fritz.box fritz.repeater'" class="form-control input-md" value="<%HM_FRITZ_IP%>">
+  <span class="help-block helpcc">Standardwert: 'fritz.box fritz.repeater'</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="phone" id="phonelabel">Telefonnummer</label>  
+  <label class="col-md-3 control-label" for="HM_FRITZ_USER" id="HM_FRITZ_USER-Label">FRITZ! Zugangsdaten:</label>
   <div class="col-md-4">
-  <input id="phone" name="phone" type="text" placeholder="Handynummer" class="form-control input-md" required="" value="<%phone%>">
-  <span class="help-block helpphone"><%phone_note%></span>  
+  <input id="HM_FRITZ_USER" name="HM_FRITZ_USER" type="text" placeholder="Nutzername" class="form-control input-md" value="<%HM_FRITZ_USER%>">
+  <span class="help-block helpphone">Standardwert: leer (kein Nutzername notwendig)</span>  
   </div>
   <div class="col-md-3">
-  <input id="phone_note" name="phone_note" type="text" placeholder="Handynummer" class="form-control input-md" required="" value="<%phone_note%>">
-  <span class="help-block helpphone_note">Bemerkung</span>  
+  <input id="HM_FRITZ_SECRET" name="HM_FRITZ_SECRET" type="password" placeholder="Passwort" class="form-control input-md" value="<%HM_FRITZ_SECRET%>">
+  <span class="help-block helpphone_note">Standardwert: leer (kein Passwort notwendig)</span>
+  </div>
+</div>
+<!-- Text area-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_USER_LIST" id="HM_USER_LIST-Label">Eineindeutige Nutzerger‰te<br>(MAC/IP-Liste):</label>
+  <div class="col-md-8">
+    <textarea id="HM_USER_LIST" name="HM_USER_LIST" type="text" rows="4" placeholder="z.B. [John]=AA:BB:CC:DD:EE:FF [Jane]='192.168.178.10 192.168.178.20'" class="form-control input-md"><%HM_USER_LIST%></textarea>
+    <span class="help-block helpid">Standardwert: leer (keine Nutzerger‰te konfiguriert)</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="id" id="idlabel">ID</label>  
-  <div class="col-md-4">
-  <input id="id" name="id" type="text" placeholder="" class="form-control input-md" required="" value="<%id%>">
-  <span class="help-block helpid"><%id_note%></span>  
+  <label class="col-md-3 control-label" for="HM_KNOWN_LIST" id="HM_KNOWN_LIST-Label">Bekannte WLAN/LAN-Ger‰te<br>(MAC/IP-Liste):</label>  
+  <div class="col-md-8">
+    <textarea id="HM_KNOWN_LIST" name="HM_KNOWN_LIST" type="text" rows="4" placeholder="z.B. 'AA:BB:CC:DD:EE:FF 192.168.178.30'" class="form-control input-md"><%HM_KNOWN_LIST%></textarea>
+    <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE1" name="HM_KNOWN_LIST_MODE" type="radio" value="guest" checked>auf Gast-WLAN anwenden</label>
+    <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE2" name="HM_KNOWN_LIST_MODE" type="radio" value="all">auf gesamtes WLAN/LAN anwenden</label>
+    <span class="help-block helppassword">Standardwert: leer (alle unbekannten Ger‰te im gew‰hlten WLAN/LAN werden als Gastger‰te identifiziert)</span>
   </div>
-  <div class="col-md-3">
-  <input id="id_note" name="id_note" type="text" placeholder="frei lassen" class="form-control input-md" required="" value="<%id_note%>">
-  <span class="help-block helpid_note">Bemerkung</span>  
+</div>
+<!-- Separator-->
+<div class="form-group">
+  <label class="col-md-3 control-label"><u>CCU-Experteneinstellungen:</u></label>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_VAR" id="HM_CCU_PRESENCE_VAR">Variablenprefix:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_VAR" name="HM_CCU_PRESENCE_VAR" type="text" placeholder="z.B. 'Anwesenheit'" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR%>">
+    <span class="help-block helpcc">Standardwert: 'Anwesenheit'</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="password" id="passwordlabel">Passwort</label>  
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_PRESENT" id="HM_CCU_PRESENCE_PRESENT">Variablenwerte:</label>
   <div class="col-md-4">
-  <input id="password" name="password" type="text" placeholder="" class="form-control input-md" required="" value="<%password%>">
-  <span class="help-block helppassword"><%password_note%></span>  
+    <input id="HM_CCU_PRESENCE_PRESENT" name="HM_CCU_PRESENCE_PRESENT" type="text" placeholder="z.B. 'anwesend'" class="form-control input-md" value="<%HM_CCU_PRESENCE_PRESENT%>">
+    <span class="help-block helpcc">Standardwert: 'anwesend'</span>  
   </div>
   <div class="col-md-3">
-  <input id="password_note" name="password_note" type="text" placeholder="zun√§chst noch frei lassen" class="form-control input-md" required="" value="<%password_note%>">
-  <span class="help-block helppassword_note">Bemerkung</span>  
+    <input id="HM_CCU_PRESENCE_AWAY" name="HM_CCU_PRESENCE_AWAY" type="text" placeholder="z.B. 'abwesend'" class="form-control input-md" value="<%HM_CCU_PRESENCE_AWAY%>">
+    <span class="help-block helpcc">Standardwert: 'abwesend'</span>  
   </div>
 </div>
-
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_VAR_LIST" id="HM_CCU_PRESENCE_VAR_LIST">Variablennamen Listen:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_VAR_LIST" name="HM_CCU_PRESENCE_VAR_LIST" type="text" placeholder="f¸r Enum-Liste" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR_LIST%>">
+    <span class="help-block helpcc">Standardwert: 'Anwesenheit.list'</span>  
+  </div>
+  <div class="col-md-3">
+    <input id="HM_CCU_PRESENCE_VAR_STR" name="HM_CCU_PRESENCE_VAR_STR" type="text" placeholder="f¸r String-Liste" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR_STR%>">
+    <span class="help-block helpcc">Standardwert: 'Anwesenheit.str'</span>  
+  </div>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_GUEST" id="HM_CCU_PRESENCE_GUEST">Variablenpostfixe:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_GUEST" name="HM_CCU_PRESENCE_GUEST" type="text" placeholder="z.B. 'Gast'" class="form-control input-md" value="<%HM_CCU_PRESENCE_GUEST%>">
+    <span class="help-block helpcc">Standardwert: 'Gast'</span>  
+  </div>
+  <div class="col-md-3">
+    <input id="HM_CCU_PRESENCE_NOBODY" name="HM_CCU_PRESENCE_NOBODY" type="text" placeholder="z.B. 'Niemand'" class="form-control input-md" value="<%HM_CCU_PRESENCE_NOBODY%>">
+    <span class="help-block helpcc">Standardwert: 'Niemand'</span>  
+  </div>
+</div>
 <!-- Button -->
 <div class="form-group">
-  <label class="control-label col-md-2" for="button1id"> </label>
+  <label class="control-label col-md-3" for="button1id"> </label>
 <div class="controls">
     <button type="submit" id="save" name="command" value="save" class="btn btn-default btn-customedit custom1" >
       <span class="glyphicon glyphicon-ok"></span>   Speichern</button>
@@ -106,7 +142,7 @@
     </noscript>
     <script type="text/javascript">document.write("<button type=\"button\" id=\"defaults\" name=\"defaults\"  value='defaults' class=\"btn btn-default btn-customdelete custom1\" onclick=\"check()\">");
     </script> Voreinstellungen</button>
-    <script type="text/javascript">document.write("<button type=\"reset\" id=\"reset\" name=\"reset\"  value='reset' class=\"btn btn-default btn-customdelete custom1\" onclick=\"\">  Zur√ºck</button>");</script>
+    <script type="text/javascript">document.write("<button type=\"reset\" id=\"reset\" name=\"reset\"  value='reset' class=\"btn btn-default btn-customdelete custom1\" onclick=\"\">  Abbrechen</button>");</script>
 </div> 
 </div>
 </fieldset>
@@ -120,7 +156,7 @@
 <script type="text/javascript">
 function check () {
   $('#cc').val('49');
-  $('#phone').val("");
+  $('#HM_FRITZ_USER').val("Nutzername");
   $('#id').val("");
   $('#password').val("");
   $('#cc_note').val("L√§nderkennung");
@@ -131,4 +167,3 @@ function check () {
 </script>
 </body>
 </html>
-
