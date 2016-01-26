@@ -1,0 +1,47 @@
+/* CSS Document */
+
+.custom {
+    width: 100px !important;
+}.custom1 {
+    width: 160px !important;
+}
+
+.navbar-fixed-top .nav {
+    padding: 0px 0;
+}
+.navbar-nav > li > a, .navbar-brand {
+    height: 20px;
+}
+.navbar {min-height:28px !important;}
+@media(min-width:768px) {
+
+    .navbar-fixed-top .navbar-brand {
+        padding: 11px 0;
+    }
+}
+.table tbody>tr>td.vert-align{
+    vertical-align: middle;
+}
+.sonos {
+    height: 48px;
+    width: 48px;
+}
+
+.body-blue {
+  background: #eaecfa;
+}
+
+/* Paste this css to your style sheet file or under head tag */
+/* This only works with JavaScript, 
+if it's not present, don't show loader */
+.no-js #loader { display: none;  }
+.js #loader { display: block; position: absolute; left: 100px; top: 100; }
+.se-pre-con {
+    position: fixed;
+    left: 0px;
+    top: 110px;
+    width: 100%;
+    height: 20%;
+    z-index: 9999;
+    background: url(../img/Preloader.gif) center no-repeat #fff;
+}

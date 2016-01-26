@@ -1,0 +1,134 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <html lang="en">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="settings">
+    <meta name="author" content="fiveyears">
+    <meta name="language" content="en">
+  <!-- Bootstrap core CSS -->
+  <link href="../public/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom styles for this template -->
+  <link href="../public/css/custombootstrap.css" rel="stylesheet">
+  <link href="../public/css/custom.css" rel="stylesheet">
+<title>HM yowsup-Addon</title></head>
+<body  style="zoom: 1; margin-top: 60px;"> 
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span>
+         <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../en.index.html"  target="_blank"><img src="../public/img/logo.png" alt=""> &nbsp;
+ &nbsp;</a>
+      </div>
+   <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav ">
+        <li class="active"><a href="../en.index.html">Home</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="settings.cgi">Deutsch</a></li>
+        <li><a href="en.settings.cgi">Settings</a></li>
+       </ul>        
+     </div><!--/.nav-collapse -->
+  </div><!-- class="container" -->
+</div><!-- class="navbar ..." -->
+<div class="container center1 col-md-8" id="content"> 
+<legend>HM yowsup-Addon - Einstellungen</legend>
+<div class="well well-s">
+<p class='lead'>The ID should be empty, the notes doesn't matter at all!</p>
+
+<form class='form-horizontal' name='f_edit' id='f_edit'  action="en.settings.cgi" method="get">
+<fieldset>
+       
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-2 control-label" for="cc" id="cc">Country code</label>  
+  <div class="col-md-4">
+  <input id="cc" name="cc" type="text" placeholder="e. g. 49 for Germany" class="form-control input-md" required="" value="<%cc%>">
+  <span class="help-block helpcc"><%cc_note%></span>  
+  </div>
+  <div class="col-md-3">
+  <input id="cc_note" name="cc_note" type="text" placeholder="Länderkennung" class="form-control input-md" required="" value="<%cc_note%>">
+  <span class="help-block helpcc_note">note</span>  
+  </div>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-2 control-label" for="phone" id="phone">Phone number</label>  
+  <div class="col-md-4">
+  <input id="phone" name="phone" type="text" placeholder="Phone number" class="form-control input-md" required="" value="<%phone%>">
+  <span class="help-block helpphone"><%phone_note%></span>  
+  </div>
+  <div class="col-md-3">
+  <input id="phone_note" name="phone_note" type="text" placeholder="Phone number" class="form-control input-md" required="" value="<%phone_note%>">
+  <span class="help-block helpphone_note">note</span>  
+  </div>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-2 control-label" for="id" id="id">ID</label>  
+  <div class="col-md-4">
+  <input id="id" name="id" type="text" placeholder="" class="form-control input-md" required="" value="<%id%>">
+  <span class="help-block helpid"><%id_note%></span>  
+  </div>
+  <div class="col-md-3">
+  <input id="id_note" name="id_note" type="text" placeholder="don't fill in" class="form-control input-md" required="" value="<%id_note%>">
+  <span class="help-block helpid_note">note</span>  
+  </div>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-2 control-label" for="password" id="password">Password</label>  
+  <div class="col-md-4">
+  <input id="password" name="password" type="text" placeholder="" class="form-control input-md" required="" value="<%password%>">
+  <span class="help-block helppassword"><%password_note%></span>  
+  </div>
+  <div class="col-md-3">
+  <input id="password_note" name="password_note" type="text" placeholder="don't fill in at first" class="form-control input-md" required="" value="<%password_note%>">
+  <span class="help-block helppassword_note">note</span>  
+  </div>
+</div>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="control-label col-md-2" for="button1id"> </label>
+<div class="controls">
+    <button type="submit" id="save" name="command" value="save" class="btn btn-default btn-customedit custom1" >
+      <span class="glyphicon glyphicon-ok"></span> Save </button>
+    <noscript>  
+    <button type="submit" id="defaults" name="command" value="defaults" class="btn btn-default btn-customdelete custom1">
+    </noscript>
+    <script type="text/javascript">document.write("<button type=\"button\" id=\"defaults\" name=\"defaults\"  value='defaults' class=\"btn btn-default btn-customdelete custom1\" onclick=\"check()\">");
+    </script> Defaults</button>
+    <script type="text/javascript">document.write("<button type=\"reset\" id=\"reset\" name=\"reset\"  value='reset' class=\"btn btn-default btn-customdelete custom1\" onclick=\"\">  Reset</button>");</script>
+</div> 
+</div>
+</fieldset>
+</form>
+
+
+</div><!--div class="well"--> 
+</div><!--div class="container"--> 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="../public/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+function check () {
+  $('#cc').val('49');
+  $('#phone').val("");
+  $('#id').val("");
+  $('#password').val("");
+  $('#cc_note').val("Country code");
+  $('#phone_note').val("Phone number");
+  $('#id_note').val("don't fill in in");
+  $('#password_note').val("don't fill in in at first");
+}
+</script>
+</body>
+</html>
+
