@@ -16,12 +16,13 @@ case "$1" in
     ;;
 
   info)
-    VER=$(cat ${WWWDIR}/VERSION)
     echo "Info: <b>FRITZ!-based Presence Detection Addon</b><br>"
+    echo "Info: (c) 2015-2016 Jens Maus<br>"
     echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
-    echo "Version: ${VER}"
+    echo "Version: $(cat ${WWWDIR}/VERSION)"
     echo "Name: hm_pdetect"
     echo "Operations: uninstall"
+    echo "Config-Url: /addons/${ADDONNAME}/"
     echo "Update: /addons/${ADDONNAME}/update-check.cgi"
     ;;
 
