@@ -39,7 +39,7 @@ This CCU-Addon allows to implement a general home presence detection system with
 ## Support
 In case of problems/bugs or if you have any feature requests please feel free to open a [new ticket](https://github.com/jens-maus/hm_pdetect/issues) at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: [hm_pdetect](http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907).
 
-## Lizenz
+## License
 The use and development of this addon is based on the GPL open source license
 
 ## Authors
