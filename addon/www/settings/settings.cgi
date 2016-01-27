@@ -1,11 +1,12 @@
 #!/usr/bin/env tclsh
 source [file join [file dirname [info script]] inc/settings.tcl]
+
 parseQuery
+
 if { $args(command) == "defaults" } {
   set args(HM_FRITZ_IP) ""
   set args(HM_FRITZ_USER) ""
   set args(HM_FRITZ_SECRET) ""
-  set args(HM_CCU_IP) "127.0.0.1"
   set args(HM_CCU_PRESENCE_VAR) ""
   set args(HM_CCU_PRESENCE_VAR_LIST) ""
   set args(HM_CCU_PRESENCE_VAR_STR) ""
@@ -28,7 +29,6 @@ if { $args(command) == "save" } {
 set HM_FRITZ_IP ""
 set HM_FRITZ_USER ""
 set HM_FRITZ_SECRET ""
-set HM_CCU_IP "127.0.0.1"
 set HM_CCU_PRESENCE_VAR ""
 set HM_CCU_PRESENCE_VAR_LIST ""
 set HM_CCU_PRESENCE_VAR_STR ""

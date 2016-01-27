@@ -1,19 +1,19 @@
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-  <html lang="en">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="settings">
-    <meta name="author" content="fiveyears">
-    <meta name="language" content="en">
-  <!-- Bootstrap core CSS -->
-  <link href="../public/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom styles for this template -->
-  <link href="../public/css/custombootstrap.css" rel="stylesheet">
-  <link href="../public/css/custom.css" rel="stylesheet">
-<title>HM yowsup-Addon</title></head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="settings">
+  <meta name="author" content="mail@jens-maus.de">
+  <meta name="language" content="en, english">
+	<!-- Bootstrap core CSS -->
+	<link href="../public/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Custom styles for this template -->
+	<link href="../public/css/custombootstrap.css" rel="stylesheet">
+	<link href="../public/css/custom.css" rel="stylesheet">
+  <title>HM-pdetect Addon</title>
+</head>
 <body  style="zoom: 1; margin-top: 60px;"> 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -29,89 +29,125 @@
       </div>
    <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav ">
-        <li class="active"><a href="../en.index.html">Home</a></li>
+        <li><a href="../en.index.html">About</a></li>
+        <li><a href="en.logoutput.cgi">Logfile</a></li>
+        <li class="active"><a href="en.settings.cgi">Configuration</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="settings.cgi">Deutsch</a></li>
-        <li><a href="en.settings.cgi">Settings</a></li>
-       </ul>        
+      </ul>        
      </div><!--/.nav-collapse -->
   </div><!-- class="container" -->
 </div><!-- class="navbar ..." -->
 <div class="container center1 col-md-8" id="content"> 
-<legend>HM yowsup-Addon - Einstellungen</legend>
+<legend>FRITZ!-based Presence Detection - Configuration</legend>
 <div class="well well-s">
-<p class='lead'>The ID should be empty, the notes doesn't matter at all!</p>
 
 <form class='form-horizontal' name='f_edit' id='f_edit'  action="en.settings.cgi" method="get">
 <fieldset>
        
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="cc" id="cc">Country code</label>  
+  <label class="col-md-3 control-label" for="HM_FRITZ_IP" id="HM_FRITZ_IP-Label">FRITZ! Hostnames/IPs:</label>
   <div class="col-md-4">
-  <input id="cc" name="cc" type="text" placeholder="e. g. 49 for Germany" class="form-control input-md" required="" value="<%cc%>">
-  <span class="help-block helpcc"><%cc_note%></span>  
-  </div>
-  <div class="col-md-3">
-  <input id="cc_note" name="cc_note" type="text" placeholder="Länderkennung" class="form-control input-md" required="" value="<%cc_note%>">
-  <span class="help-block helpcc_note">note</span>  
+  <input id="HM_FRITZ_IP" name="HM_FRITZ_IP" type="text" placeholder="e.g. 'fritz.box fritz.repeater'" class="form-control input-md" value="<%HM_FRITZ_IP%>">
+  <span class="help-block">Default: 'fritz.box fritz.repeater'</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="phone" id="phone">Phone number</label>  
+  <label class="col-md-3 control-label" for="HM_FRITZ_USER" id="HM_FRITZ_USER-Label">FRITZ! Login Credentials:</label>
   <div class="col-md-4">
-  <input id="phone" name="phone" type="text" placeholder="Phone number" class="form-control input-md" required="" value="<%phone%>">
-  <span class="help-block helpphone"><%phone_note%></span>  
+  <input id="HM_FRITZ_USER" name="HM_FRITZ_USER" type="text" placeholder="Username" class="form-control input-md" value="<%HM_FRITZ_USER%>">
+  <span class="help-block">Default: empty (no username required)</span>  
   </div>
   <div class="col-md-3">
-  <input id="phone_note" name="phone_note" type="text" placeholder="Phone number" class="form-control input-md" required="" value="<%phone_note%>">
-  <span class="help-block helpphone_note">note</span>  
+  <input id="HM_FRITZ_SECRET" name="HM_FRITZ_SECRET" type="password" placeholder="Password" class="form-control input-md" value=<%HM_FRITZ_SECRET%>>
+  <span class="help-block">Default: empty (no password required)</span>
+  </div>
+</div>
+<!-- Text area-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_USER_LIST" id="HM_USER_LIST-Label">Unique user devices<br>(MAC/IP-List):</label>
+  <div class="col-md-8">
+    <textarea id="HM_USER_LIST" name="HM_USER_LIST" type="text" rows="4" placeholder="e.g. [John]=AA:BB:CC:DD:EE:FF [Jane]='192.168.178.10 192.168.178.20'" class="form-control input-md"><%HM_USER_LIST%></textarea>
+    <span class="help-block">Default: empty (no user devices configured)</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="id" id="id">ID</label>  
-  <div class="col-md-4">
-  <input id="id" name="id" type="text" placeholder="" class="form-control input-md" required="" value="<%id%>">
-  <span class="help-block helpid"><%id_note%></span>  
+  <label class="col-md-3 control-label" for="HM_KNOWN_LIST" id="HM_KNOWN_LIST-Label">Known WiFi/LAN devices<br>(MAC/IP-List):</label>  
+  <div class="col-md-8">
+    <textarea id="HM_KNOWN_LIST" name="HM_KNOWN_LIST" type="text" rows="4" placeholder="e.g. 'AA:BB:CC:DD:EE:FF 192.168.178.30'" class="form-control input-md"><%HM_KNOWN_LIST%></textarea>
+    <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE1" name="HM_KNOWN_LIST_MODE" type="radio" value="guest" <%HM_KNOWN_LIST_MODE1%>>apply to Guest-WiFi</label>
+    <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE2" name="HM_KNOWN_LIST_MODE" type="radio" value="all" <%HM_KNOWN_LIST_MODE2%>>apply to whole WiFi/LAN</label>
+    <span class="help-block">Default: empty (all unknown devices in selected WiFi/LAN will be classified as guest devices)</span>
   </div>
-  <div class="col-md-3">
-  <input id="id_note" name="id_note" type="text" placeholder="don't fill in" class="form-control input-md" required="" value="<%id_note%>">
-  <span class="help-block helpid_note">note</span>  
+</div>
+<!-- Separator-->
+<div class="form-group">
+  <label class="col-md-3 control-label"><u>CCU expert settings</u></label>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_VAR" id="HM_CCU_PRESENCE_VAR">Variableprefix:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_VAR" name="HM_CCU_PRESENCE_VAR" type="text" placeholder="e.g. 'Presence'" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR%>">
+    <span class="help-block">Default: 'Anwesenheit'</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-2 control-label" for="password" id="password">Password</label>  
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_PRESENT" id="HM_CCU_PRESENCE_PRESENT">Variable values:</label>
   <div class="col-md-4">
-  <input id="password" name="password" type="text" placeholder="" class="form-control input-md" required="" value="<%password%>">
-  <span class="help-block helppassword"><%password_note%></span>  
+    <input id="HM_CCU_PRESENCE_PRESENT" name="HM_CCU_PRESENCE_PRESENT" type="text" placeholder="e.g. 'present'" class="form-control input-md" value="<%HM_CCU_PRESENCE_PRESENT%>">
+    <span class="help-block">Default: 'anwesend'</span>
   </div>
   <div class="col-md-3">
-  <input id="password_note" name="password_note" type="text" placeholder="don't fill in at first" class="form-control input-md" required="" value="<%password_note%>">
-  <span class="help-block helppassword_note">note</span>  
+    <input id="HM_CCU_PRESENCE_AWAY" name="HM_CCU_PRESENCE_AWAY" type="text" placeholder="e.g. 'away'" class="form-control input-md" value="<%HM_CCU_PRESENCE_AWAY%>">
+    <span class="help-block">Default: 'abwesend'</span>  
   </div>
 </div>
-
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_VAR_LIST" id="HM_CCU_PRESENCE_VAR_LIST">Variablennames lists:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_VAR_LIST" name="HM_CCU_PRESENCE_VAR_LIST" type="text" placeholder="for enum list" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR_LIST%>">
+    <span class="help-block">Default: 'Anwesenheit.list'</span>  
+  </div>
+  <div class="col-md-3">
+    <input id="HM_CCU_PRESENCE_VAR_STR" name="HM_CCU_PRESENCE_VAR_STR" type="text" placeholder="for string list" class="form-control input-md" value="<%HM_CCU_PRESENCE_VAR_STR%>">
+    <span class="help-block">Default: 'Anwesenheit.str'</span>  
+  </div>
+</div>
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_GUEST" id="HM_CCU_PRESENCE_GUEST">Variablepostfix:</label>
+  <div class="col-md-4">
+    <input id="HM_CCU_PRESENCE_GUEST" name="HM_CCU_PRESENCE_GUEST" type="text" placeholder="e.g. 'Guest'" class="form-control input-md" value="<%HM_CCU_PRESENCE_GUEST%>">
+    <span class="help-block">Default: 'Gast'</span>  
+  </div>
+  <div class="col-md-3">
+    <input id="HM_CCU_PRESENCE_NOBODY" name="HM_CCU_PRESENCE_NOBODY" type="text" placeholder="e.g. 'Nobody'" class="form-control input-md" value="<%HM_CCU_PRESENCE_NOBODY%>">
+    <span class="help-block">Default: 'Niemand'</span>  
+  </div>
+</div>
 <!-- Button -->
 <div class="form-group">
-  <label class="control-label col-md-2" for="button1id"> </label>
+  <label class="control-label col-md-3" for="button1id"> </label>
 <div class="controls">
     <button type="submit" id="save" name="command" value="save" class="btn btn-default btn-customedit custom1" >
-      <span class="glyphicon glyphicon-ok"></span> Save </button>
-    <noscript>  
+      <span class="glyphicon glyphicon-ok"></span>   Save</button>
+     <noscript> 
     <button type="submit" id="defaults" name="command" value="defaults" class="btn btn-default btn-customdelete custom1">
     </noscript>
     <script type="text/javascript">document.write("<button type=\"button\" id=\"defaults\" name=\"defaults\"  value='defaults' class=\"btn btn-default btn-customdelete custom1\" onclick=\"check()\">");
-    </script> Defaults</button>
-    <script type="text/javascript">document.write("<button type=\"reset\" id=\"reset\" name=\"reset\"  value='reset' class=\"btn btn-default btn-customdelete custom1\" onclick=\"\">  Reset</button>");</script>
+    </script> Reset to defaults</button>
+    <script type="text/javascript">document.write("<button type=\"reset\" id=\"reset\" name=\"reset\"  value='reset' class=\"btn btn-default btn-customdelete custom1\" onclick=\"\">  Abort</button>");</script>
 </div> 
 </div>
 </fieldset>
 </form>
-
 
 </div><!--div class="well"--> 
 </div><!--div class="container"--> 
@@ -119,16 +155,21 @@
 <script src="../public/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 function check () {
-  $('#cc').val('49');
-  $('#phone').val("");
-  $('#id').val("");
-  $('#password').val("");
-  $('#cc_note').val("Country code");
-  $('#phone_note').val("Phone number");
-  $('#id_note').val("don't fill in in");
-  $('#password_note').val("don't fill in in at first");
+  $('#HM_FRITZ_IP').val("");
+  $('#HM_FRITZ_USER').val("");
+  $('#HM_FRITZ_SECRET').val("");
+  $('#HM_USER_LIST').val("");
+  $('#HM_KNOWN_LIST').val("");
+  $('#HM_KNOWN_LIST_MODE1').prop("checked", true);
+  $('#HM_KNOWN_LIST_MODE2').prop("checked", false);
+  $('#HM_CCU_PRESENCE_VAR').val("");
+  $('#HM_CCU_PRESENCE_VAR_LIST').val("");
+  $('#HM_CCU_PRESENCE_VAR_STR').val("");
+  $('#HM_CCU_PRESENCE_GUEST').val("");
+  $('#HM_CCU_PRESENCE_NOBODY').val("");
+  $('#HM_CCU_PRESENCE_PRESENT').val("");
+  $('#HM_CCU_PRESENCE_AWAY').val("");
 }
 </script>
 </body>
 </html>
-

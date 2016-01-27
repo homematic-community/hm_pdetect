@@ -1,22 +1,21 @@
 <!DOCTYPE HTML>
-<html lang="en-US">
-    <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <html lang="de">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="settings">
-    <meta name="author" content="fiveyears">
-    <meta name="language" content="de, german">
-<!-- Bootstrap core CSS -->
-<link href="public/css/bootstrap.min.css" rel="stylesheet">
-<!-- Custom styles for this template -->
-<link href="public/css/custombootstrap.css" rel="stylesheet">
-<link href="public/css/custom.css" rel="stylesheet">
-        <title>WhatsApp Addon for Raspimatic</title>
-    </head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="settings">
+  <meta name="author" content="mail@jens-maus.de">
+  <meta name="language" content="en, english">
+  <!-- Bootstrap core CSS -->
+  <link href="public/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom styles for this template -->
+  <link href="public/css/custombootstrap.css" rel="stylesheet">
+  <link href="public/css/custom.css" rel="stylesheet">
+  <title>HM-pdetect Addon</title>
+</head>
 <body class='body-blu' style="zoom: 1; margin-top: 60px;"> 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -27,60 +26,111 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="en.index.html"  target="_blank"><img src="public/img/logo.png" alt=""> &nbsp;
+      <a class="navbar-brand" href="#"  target="_blank"><img src="public/img/logo.png" alt=""> &nbsp;
  &nbsp;</a>
       </div>
    <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav ">
-        <li class="active"><a href="en.index.html">Home</a></li>
+        <li class="active"><a href="en.index.html">About</a></li>
+        <li><a href="settings/en.logoutput.cgi">Logfile</a></li>
+        <li><a href="settings/en.settings.cgi">Configuration</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="index.html">Deutsch</a></li>
-        <li><a href="settings/en.settings.cgi">Settings</a></li>
-       </ul>        
+      </ul> 
      </div><!--/.nav-collapse -->
   </div><!-- class="container" -->
 </div><!-- class="navbar ..." -->
 
-
-
-
 <div class="container center1 col-md-8" id="content"> 
-<legend>HomeMatic WhatsApp Addon for the Raspimatic</legend>
+<legend>FRITZ!-based Presence Detection for HomeMatic - hm_pdetect</legend>
 <div class="well well-s">
-<p>This repository hosts the development on a HomeMatic Raspimatic-Addon to send WhatsApp-Messages by using the <a href="https://github.com/tgalal/yowsup.git">Yowsup python library</a>.</p>
+<b>General</b>
+<p>
+This CCU-Addon allows to implement a general home presence detection system within a <a href="http://www.homematic.com/">eQ3 HomeMatic</a> homeautomation system. It regularly queries the WiFi/LAN status of user devices (e.g. Smartphones) logging in/out of <a href="http://www.avm.de/">AVM FRITZ!</a> WiFi routers (e.g. FRITZ!Box, FRITZ!Repeater). Upon manually configured MAC and IP addresses of user devices this addon is able to set the general home presence status of that user in terms of setting CCU-based system variables. These variables can then be evaluated within the general HomeMatic home automation system. In addition, any device that is not recognized as a configured user devices or known device will otherwise be considered a guest device and a separate system variable set accordingly. This allows to identify any guests being present at the house so that e.g. the heating system of a guest room could be switched on/off accordingly.
+</p>
 
-<b>Supported CCU Devices</b>
+<b>Features</b>
+<p>
+<ul>
+<li>Querying of several FRITZ!-devices (FRITZ!Box/Repeater) in one run</li>
+<li>interval-based querying of FRITZ!-devices (every 15 seconds)</li>
+<li>Support of FRITZ!Box/Repeater local network login with and without password</li>
+<li>Possibility to remotely query FRITZ!-devices via https</li>
+<li>Support of querying a dedicated guest-WiFi network</li>
+<li>User device definition based on MAC and/or IP address</li>
+<li>Possibility to define multiple devices per user</li>
+<li>Automatically generates all necessary CCU system variables</li>
+<li>Additional String and Enum system variable to easily display the general presence status at home</li>
+<li>Guest detection based on unknown devices being identified in a dedicated Guest-WiFi</li>
+<li>Guest detection can be applied to the whole WiFi/LAN environment</li>
+<li>Web based configuration pages accessible via CCU-WebUI</li>
+</ul>
+</p>
 
-<p>An installation of the Addon is only supported on the following CCU devices:</p>
+<b>Supported CCU models</b>
 
 <ul>
-<li>RaspberryMatic (beta)</li>
+<li>HomeMatic CCU1</li>
+<li><a href="http://www.eq-3.de/produkt-detail-zentralen-und-gateways/items/homematic-zentrale-ccu-2.html">HomeMatic CCU2</a></li>
+<li><a href="http://homematic-forum.de/forum/viewtopic.php?f=56&t=26917">RaspberryMatic</a></li>
 </ul>
 
+<b>Supported FRITZ! models</b>
 
-<b>Installation</b>
+<ul>
+<li>All models of FRITZ!Box and FRITZ!Repeater running with FRITZ!OS 6 or newer</li>
+</ul>
+
+<b>Installation CCU Addon</b>
 
 <ol>
-<li>Download the latest Addon release on <a href="https://github.com/fiveyears/hm_yowsup">github</a></li>
-<li>Upload it via the HomeMatic WebUI provided Addon functionality.</li>
-<li>Login to your CCU and configure the Addon accordingly.</li>
+  <li>Download of recent Addon-Release from <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
+  <li>Installation of Addon archive (<code>hm_pdetect-X.X.tar.gz</code>) via WebUI interface of CCU device</li>
+  <li>Configuration of FRITZ!Box/Repeater (see next section)</li>
+  <li>Configuration of Addon using the WebUI accessible <a href="settings/settings.cgi">config pages</a></li>
+</ol>
+
+<b>Configuration FRITZ! device</b>
+
+<ol>
+  <li>Open the web configuration of the individual FRITZ!-device (e.g. <a href="http://fritz.box/">http://fritz.box/</a>)
+  <li>Create a new dedicated user via <i>System->FRITZ!Box-User->Add User</i>
+  <ul>
+    <li>Restrict access rights of user to <i>FRITZ!Box Settings</i> only
+  </ul>
+  <li>Open the Homenetwork-Login configuration at <i>System->FRITZ!Box-User->Login to Homenetwork</i>
+  <ul>
+    <li>Modify login setting to <i>Login with FRITZ!Box-Username and Password</i>
+  </ul>
 </ol>
 
 
 <b>Support</b>
 
-<p>If you encounter any problems or have any idea for enhancements of this addon please create a corresponding ticket at the <a href="https://github.com/fiveyears/hm_yowsup/issues">issue tracker</a>. For getting direct help a german speaking discussion forum is hosting a seperate discussion thread as well <a href="http://homematic-forum.de/forum/viewtopic.php?f=56&amp;t=28436">here</a>.</p>
+<p>
+In case of problems/bugs or if you have any feature requests please feel free to open a <a href="https://github.com/jens-maus/hm_pdetect/issues">new ticket</a> at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: <a href="http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907">hm_pdetect</a>.
+</p>
 
-<b>License</b>
+<b>Lizenz</b>
 
-<p>The Addon as published in this Github repository is provided under the GPL license.</p>
+<p>The use and development of this addon is based on the GPL open source license</p>
 
 <b>Authors</b>
 
+<p>Copyright (c) 2015-2016 Jens Maus &lt;mail@jens-maus.de&gt;</p>
+
+<b>Notice</b>
+
+<p>
+This Addon uses KnowHow that was developed throughout the following projects:
 <ul>
-<li>The main developer of the addon is 'fiveyears'.</li>
+  <li><a href="https://github.com/jollyjinx/homematic">https://github.com/jollyjinx/homematic</a></li>
+  <li><a href="https://github.com/max2play/webinterface">https://github.com/max2play/webinterface</a></li>
 </ul>
-</well>
-</div></body>
+</p>
+
+</div>
+</div>
+</body>
 </html>

@@ -1,7 +1,7 @@
 set ADDONNAME "hm_pdetect"
 set FILENAME "/usr/local/addons/hm_pdetect/etc/hm_pdetect.conf"
 
-array set args { command INV HM_FRITZ_IP {} HM_FRITZ_USER {} HM_FRITZ_SECRET {} HM_CCU_IP {} HM_CCU_PRESENCE_VAR {} HM_CCU_PRESENCE_VAR_LIST {} HM_CCU_PRESENCE_VAR_STR {} HM_CCU_PRESENCE_GUEST {} HM_CCU_PRESENCE_NOBODY {} HM_CCU_PRESENCE_PRESENT {} HM_CCU_PRESENCE_AWAY {} HM_USER_LIST {} HM_KNOWN_LIST_MODE {} HM_KNOWN_LIST {} }
+array set args { command INV HM_FRITZ_IP {} HM_FRITZ_USER {} HM_FRITZ_SECRET {} HM_CCU_PRESENCE_VAR {} HM_CCU_PRESENCE_VAR_LIST {} HM_CCU_PRESENCE_VAR_STR {} HM_CCU_PRESENCE_GUEST {} HM_CCU_PRESENCE_NOBODY {} HM_CCU_PRESENCE_PRESENT {} HM_CCU_PRESENCE_AWAY {} HM_USER_LIST {} HM_KNOWN_LIST_MODE {} HM_KNOWN_LIST {} }
 
 proc utf8 {hex} {
     set hex [string map {% {}} $hex]
@@ -19,6 +19,30 @@ proc url-decode str {
     # process \u unicode mapped chars
     return [subst -novar  $str]
 }
+
+proc str-escape str {
+    set str [string map -nocase { 
+              "\"" "\\\""
+              "\$" "\\\$"
+              "\\" "\\\\"
+              "`"  "\\`"
+             } $str]
+
+    return $str
+}
+
+proc str-unescape str {
+    set str [string map -nocase { 
+              "\\\"" "\""
+              "\\\$" "\$"
+              "\\\\" "\\"
+              "\\`"  "`"
+             } $str]
+
+    return $str
+}
+
+
 proc parseQuery { } {
     global args env
     
@@ -34,7 +58,6 @@ proc parseQuery { } {
     }
 }
 
-
 proc loadFile { fileName } {
     set content ""
     set fd -1
@@ -49,7 +72,7 @@ proc loadFile { fileName } {
 }
 
 proc loadConfigFile { } {
-    global FILENAME HM_FRITZ_IP HM_FRITZ_USER HM_FRITZ_SECRET HM_CCU_IP HM_CCU_PRESENCE_VAR HM_CCU_PRESENCE_VAR_LIST HM_CCU_PRESENCE_VAR_STR HM_CCU_PRESENCE_GUEST HM_CCU_PRESENCE_NOBODY HM_CCU_PRESENCE_PRESENT HM_CCU_PRESENCE_AWAY HM_USER_LIST HM_KNOWN_LIST_MODE HM_KNOWN_LIST
+    global FILENAME HM_FRITZ_IP HM_FRITZ_USER HM_FRITZ_SECRET HM_CCU_PRESENCE_VAR HM_CCU_PRESENCE_VAR_LIST HM_CCU_PRESENCE_VAR_STR HM_CCU_PRESENCE_GUEST HM_CCU_PRESENCE_NOBODY HM_CCU_PRESENCE_PRESENT HM_CCU_PRESENCE_AWAY HM_USER_LIST HM_KNOWN_LIST_MODE HM_KNOWN_LIST
     set conf ""
     catch {set conf [loadFile $FILENAME]}
 
@@ -57,7 +80,6 @@ proc loadConfigFile { } {
         regexp -line {^HM_FRITZ_IP=\"(.*)\"$} $conf dummy HM_FRITZ_IP
         regexp -line {^HM_FRITZ_USER=\"(.*)\"$} $conf dummy HM_FRITZ_USER
         regexp -line {^HM_FRITZ_SECRET=\"(.*)\"$} $conf dummy HM_FRITZ_SECRET
-        regexp -line {^HM_CCU_IP=\"(.*)\"$} $conf dummy HM_CCU_IP
         regexp -line {^HM_CCU_PRESENCE_VAR=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_VAR
         regexp -line {^HM_CCU_PRESENCE_VAR_LIST=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_VAR_LIST
         regexp -line {^HM_CCU_PRESENCE_VAR_STR=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_VAR_STR
@@ -69,9 +91,15 @@ proc loadConfigFile { } {
         regexp -line {^HM_KNOWN_LIST_MODE=\"(.*)\"$} $conf dummy HM_KNOWN_LIST_MODE
         regexp -line {^HM_KNOWN_LIST=\"(.*)\"$} $conf dummy HM_KNOWN_LIST
 
-        # lets replace all spaces with newlines
+        # lets replace all spaces with newlines for the
+        # textarea fields in the html code.
         regsub -all {\s+} $HM_KNOWN_LIST "\n" HM_KNOWN_LIST
         regsub -all {\s+\[} $HM_USER_LIST "\n\[" HM_USER_LIST
+
+        # make sure to unescape variable content that was properly escaped
+        # due to shell variable regulations
+        set HM_FRITZ_USER [str-unescape $HM_FRITZ_USER]
+        set HM_FRITZ_SECRET [str-unescape $HM_FRITZ_SECRET]
     }
 }
 
@@ -83,7 +111,6 @@ proc saveConfigFile { } {
     set HM_FRITZ_IP [url-decode $args(HM_FRITZ_IP)]
     set HM_FRITZ_USER [url-decode $args(HM_FRITZ_USER)]
     set HM_FRITZ_SECRET [url-decode $args(HM_FRITZ_SECRET)]
-    set HM_CCU_IP [url-decode $args(HM_CCU_IP)]
     set HM_CCU_PRESENCE_VAR [url-decode $args(HM_CCU_PRESENCE_VAR)]
     set HM_CCU_PRESENCE_VAR_LIST [url-decode $args(HM_CCU_PRESENCE_VAR_LIST)]
     set HM_CCU_PRESENCE_VAR_STR [url-decode $args(HM_CCU_PRESENCE_VAR_STR)]
@@ -96,10 +123,19 @@ proc saveConfigFile { } {
     set HM_KNOWN_LIST [url-decode $args(HM_KNOWN_LIST)]
 
     # make sure to replace newline stuff and double whitespaces with single whitespaces
+    # because in the config we don't allow newlines.
     regsub -all {\s+} $HM_USER_LIST " " HM_USER_LIST
     regsub -all {\s+} $HM_KNOWN_LIST " " HM_KNOWN_LIST
+
+    # make sure to escape variable content that may contain special
+    # characters not allowed unescaped in shell variables.
+    set HM_FRITZ_USER [str-escape $HM_FRITZ_USER]
+    set HM_FRITZ_SECRET [str-escape $HM_FRITZ_SECRET]
     
-    puts $fd [url-decode "HM_CCU_IP=127.0.0.1"]
+    # we set the IP of the CCU always to 127.0.0.1
+    puts $fd "HM_CCU_IP=127.0.0.1"
+
+    # only add the following variables if they are NOT empty
     if { [string length $HM_FRITZ_IP] > 0 }              { puts $fd "HM_FRITZ_IP=\"$HM_FRITZ_IP\"" }
     if { [string length $HM_FRITZ_USER] > 0 }            { puts $fd "HM_FRITZ_USER=\"$HM_FRITZ_USER\"" }
     if { [string length $HM_FRITZ_SECRET] > 0 }          { puts $fd "HM_FRITZ_SECRET=\"$HM_FRITZ_SECRET\"" }
@@ -111,6 +147,8 @@ proc saveConfigFile { } {
     if { [string length $HM_CCU_PRESENCE_PRESENT] > 0 }  { puts $fd "HM_CCU_PRESENCE_PRESENT=\"$HM_CCU_PRESENCE_PRESENT\"" }
     if { [string length $HM_CCU_PRESENCE_AWAY] > 0 }     { puts $fd "HM_CCU_PRESENCE_AWAY=\"$HM_CCU_PRESENCE_AWAY\"" }
     if { [string length $HM_KNOWN_LIST_MODE] > 0 }       { puts $fd "HM_KNOWN_LIST_MODE=\"$HM_KNOWN_LIST_MODE\"" }
+
+    # also add empty variables on purpose
     puts $fd "HM_USER_LIST=($HM_USER_LIST)"
     puts $fd "HM_KNOWN_LIST=\"$HM_KNOWN_LIST\""
     
