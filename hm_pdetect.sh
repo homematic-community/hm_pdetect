@@ -33,7 +33,7 @@
 #                     tools are installed and have proper versions.
 # 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
 #                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-20): - device comparisons changed to be case insensitive.
+# 0.7 (2016-01-27): - device comparisons changed to be case insensitive.
 #                   - an alternative config file can now be specified as a
 #                     commandline option.
 #                   - changed list variable to be of type 'string' to be more
@@ -295,8 +295,8 @@ function retrieveFritzBoxDeviceList()
   # check if we retrieved a valid challenge
   if [[ -z "${challenge}" ]]; then
     echo
-    echo "ERROR: could not connect to ${uri}. Please check hostname/ip or URI."
-    exit ${RETURN_FAILURE}
+    echo "WARNING: could not connect to ${uri}. Please check hostname/ip or URI."
+    return ${RETURN_FAILURE}
   fi
 
   # process login and hash it with our password
@@ -469,17 +469,29 @@ function whichEnumID()
 #
 
 echo "hm_pdetect 0.7 - a FRITZ!-based HomeMatic presence detection script"
-echo "(Jan 20 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Jan 27 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 
 # lets retrieve all mac<>ip addresses of currently
 # active devices in our network
 echo -n "Querying FRITZ! devices:"
+i=0
 for ip in ${HM_FRITZ_IP[@]}; do
   echo -n " ${ip}"
   retrieveFritzBoxDeviceList ${ip} ${HM_FRITZ_USER} ${HM_FRITZ_SECRET}
+  if [ $? -eq 0 ]; then
+    ((i = i + 1))
+  fi
 done
+
+# check that we were able to connect to at least one device
+if [ ${i} -eq 0 ]; then
+  echo "ERROR: couldn't connect to any specified FRITZ! device."
+  exit ${RETURN_FAILUE}
+fi
+
+# output some statistics
 echo
 echo " Normal-WiFi devices active: ${#normalDeviceList[@]}"
 echo " Guest-WiFi devices active: ${#guestDeviceList[@]}"
