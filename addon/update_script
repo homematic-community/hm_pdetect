@@ -18,6 +18,12 @@ chmod 755 ${ADDON_DIR}
 mkdir -p ${RCD_DIR}
 chmod 755 ${RCD_DIR}
 
+# make sure to not overwrite
+# and existing config
+if [ -e ${ADDON_DIR}/etc/hm_pdetect.conf ]; then
+  rm -f common/etc/hm_pdetect.conf
+fi
+
 # copy addon (common stuff)
 cp -af common/* ${ADDON_DIR}/
 
