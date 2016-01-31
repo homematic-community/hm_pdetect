@@ -258,13 +258,12 @@ function createVariable()
   fi
 
   # use wget to post the tcl script to tclrega.exe
-  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}/tclrega.exe")
+  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:8181/tclrega.exe")
   if [[ ${result} =~ \<v\>${vaname}\</v\> ]]; then
     echo "ok."
     return ${RETURN_SUCCESS}
   else
     echo "ERROR: could not create system variable '${vaname}'."
-    echo "'${vaname}'"
     return ${RETURN_FAILURE}
   fi
 }
