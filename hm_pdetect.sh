@@ -264,6 +264,7 @@ function createVariable()
     return ${RETURN_SUCCESS}
   else
     echo "ERROR: could not create system variable '${vaname}'."
+    echo "'${vaname}'"
     return ${RETURN_FAILURE}
   fi
 }
