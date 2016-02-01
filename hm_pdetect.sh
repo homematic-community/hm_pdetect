@@ -23,8 +23,6 @@
 # https://github.com/max2play/webinterface
 #
 
-CONFIG_FILE="hm_pdetect.conf"
-
 #####################################################
 # Main script starts here, don't modify
 # default settings (overwritten by config file)
@@ -64,7 +62,23 @@ HM_KNOWN_LIST=${HM_KNOWN_LIST:-""}
 
 # number of seconds to wait between iterations
 # (will run hm_pdetect in an endless loop)
-HM_REEXEC_WAITTIME=${HM_REEXEC_WAITTIME:-}
+HM_INTERVAL_TIME=${HM_INTERVAL_TIME:-}
+
+# where to save the process ID in case hm_pdetect runs as
+# a daemon
+HM_DAEMON_PIDFILE=${HM_DAEMON_PIDFILE:-"/var/run/hm_pdetect.pid"}
+
+# Processing logfile output name
+# (default: no output)
+HM_PROCESSLOG_FILE=${HM_PROCESSLOG_FILE:-}
+
+# maximum number of lines the logfile should contain
+# (default: 500 lines)
+HM_PROCESSLOG_MAXLINES=${HM_PROCESSLOG_MAXLINES:-500}
+
+# the config file path
+# (default: 'hm_pdetect.conf' in path where hm_pdetect.sh script resists)
+CONFIG_FILE=${CONFIG_FILE:-"$(cd "${0%/*}"; pwd)/hm_pdetect.conf"}
 
 # global return status variables
 RETURN_FAILURE=1
@@ -105,6 +119,86 @@ declare -A HM_USER_LIST     # username<>MAC/IP tuple
 declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
 declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
 
+###############################
+# lets check if config file was specified as a cmdline arg
+if [[ ${#} -gt 0 ]] && \
+   [[ "${!#}" != "child" ]] && \
+   [[ "${!#}" != "daemon" ]] && \
+   [[ "${!#}" != "start" ]] && \
+   [[ "${!#}" != "stop" ]]; then
+  CONFIG_FILE="${!#}"
+fi
+
+if [ ! -e ${CONFIG_FILE} ]; then
+  echo "WARNING: config file '${CONFIG_FILE}' doesn't exist. Using default values."
+  CONFIG_FILE=
+fi
+
+# lets source the config file a first time
+if [ -n "${CONFIG_FILE}" ]; then
+  source "${CONFIG_FILE}"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
+    exit ${RETURN_FAILURE}
+  fi
+fi
+
+###############################
+# run hm_pdetect as a real daemon by using setsid
+# to fork and deattach it from a terminal.
+PROCESS_MODE=normal
+if [ ${#} -gt 0 ]; then
+  FILE=${0##*/}
+  DIR=$(cd "${0%/*}"; pwd)
+
+  # lets check the supplied command
+  case "${1}" in
+
+    start) # 1. lets start the child
+      shift
+      exec "${DIR}/${FILE}" child "${CONFIG_FILE}" &
+      exit 0
+    ;;
+
+    child) # 2. We are the child. We need to fork the daemon now
+      shift
+      umask 0
+      echo
+      echo "Starting hm_pdetect in daemon mode."
+      exec setsid ${DIR}/${FILE} daemon "${CONFIG_FILE}" </dev/null >/dev/null 2>/dev/null &
+      exit 0
+    ;;
+
+    daemon) # 3. We are the daemon. Lets continue with the real stuff
+      shift
+      # save the PID number in the specified PIDFILE so that we 
+      # can kill it later on using this file
+      if [ -n "${HM_DAEMON_PIDFILE}" ]; then
+        echo $$ >${HM_DAEMON_PIDFILE}
+      fi
+
+      # if we end up here we are in daemon mode and
+      # can continue normally but make sure we don't allow any
+      # input
+      exec 0</dev/null
+
+      # make sure PROCESS_MODE is set to daemon
+      PROCESS_MODE=daemon
+    ;;
+
+    stop) # 4. stop the daemon if requested
+      if [ -f "${HM_DAEMON_PIDFILE}" ]; then
+        echo "Stopping hm_pdetect (pid: $(cat ${HM_DAEMON_PIDFILE}))"
+        kill $(cat ${HM_DAEMON_PIDFILE}) >/dev/null 2>&1
+        rm -f ${HM_DAEMON_PIDFILE} >/dev/null 2>&1
+      fi
+      exit 0
+    ;;
+
+  esac
+fi
+ 
+###############################
 # function returning the current state of a homematic variable
 # and returning success/failure if the variable was found/not
 function getVariableState()
@@ -440,59 +534,17 @@ function whichEnumID()
   echo ${result}
 }
 
-################################################
-# main processing starts here
-#
-
-echo "hm_pdetect 0.8 - a FRITZ!-based HomeMatic presence detection script"
-echo "(Feb 01 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
-echo
-
-# lets check for the config file definition
-if [ $# -gt 0 ]; then
-  CONFIG_FILE="${1}"
-elif [ -e "${0%/*}/${CONFIG_FILE}" ]; then
-  CONFIG_FILE="${0%/*}/${CONFIG_FILE}"
-fi
-
-if [ ! -e ${CONFIG_FILE} ]; then
-  echo "WARNING: config file '${CONFIG_FILE}' doesn't exist. Using default values."
-  CONFIG_FILE=
-fi
-
-# lets enter an endless loop to implement a
-# daemon-like behaviour
-result=-1
-while true; do
-
-  # lets wait until the next execution round in case
-  # the user wants to run it as a daemon
-  if [ ${result} -ge 0 ]; then
-    if [ -n "${HM_REEXEC_WAITTIME}" ] && [ ${HM_REEXEC_WAITTIME} -gt 0 ]; then
-      sleep ${HM_REEXEC_WAITTIME}
-      if [ $? -eq 1 ]; then
-        result=${RETURN_FAILURE}
-        break
-      fi
-    else 
-      break
-    fi
-  fi
-
-  # define success at the very beginning of each
-  # iteration
-  result=${RETURN_SUCCESS}
-
+function run_pdetect()
+{
   # output time/date of execution
   echo "== $(date) ==================================="
 
-  # lets source the config file
+  # lets source the config file (again)
   if [ -n "${CONFIG_FILE}" ]; then
     source "${CONFIG_FILE}"
     if [ $? -ne 0 ]; then
       echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
-      result=${RETURN_FAILURE}
-      continue
+      return ${RETURN_FAILURE}
     fi
   fi
 
@@ -511,8 +563,7 @@ while true; do
   # check that we were able to connect to at least one device
   if [ ${i} -eq 0 ]; then
     echo "ERROR: couldn't connect to any specified FRITZ! device."
-    result=${RETURN_FAILURE}
-    continue
+    return ${RETURN_FAILURE}
   fi
 
   # output some statistics
@@ -691,6 +742,48 @@ while true; do
   
   echo "== $(date) ==================================="
   echo
+  
+  return ${RETURN_SUCCESS}
+}
+
+################################################
+# main processing starts here
+#
+echo "hm_pdetect 0.8 - a FRITZ!-based HomeMatic presence detection script"
+echo "(Feb 01 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo
+
+# lets enter an endless loop to implement a
+# daemon-like behaviour
+result=-1
+while true; do
+
+  # lets wait until the next execution round in case
+  # the user wants to run it as a daemon
+  if [ ${result} -ge 0 ]; then
+    if [ -n "${HM_INTERVAL_TIME}" ] && [ ${HM_INTERVAL_TIME} -gt 0 ]; then
+      sleep ${HM_INTERVAL_TIME}
+      if [ $? -eq 1 ]; then
+        result=${RETURN_FAILURE}
+        break
+      fi
+    else 
+      break
+    fi
+  fi
+
+  # perform one pdetect run and in case we are running in daemon
+  # mode and having the processlogfile enabled output to the logfile instead.
+  if [ "${PROCESS_MODE}" == "daemon" ] && [ -n "${HM_PROCESSLOG_FILE}" ]; then
+    output=$(run_pdetect)
+    result=$?
+    echo "${output}" | cat - ${HM_PROCESSLOG_FILE} | head -n ${HM_PROCESSLOG_MAXLINES} >/tmp/hm_pdetect.tmp && mv /tmp/hm_pdetect.tmp ${HM_PROCESSLOG_FILE}
+  else
+    # run pdetect with normal stdout processing
+    run_pdetect
+    result=$?
+  fi
+
 done
 
 exit ${result}
