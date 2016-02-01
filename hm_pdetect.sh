@@ -27,26 +27,27 @@ CONFIG_FILE="hm_pdetect.conf"
 
 #####################################################
 # Main script starts here, don't modify
-
 # default settings (overwritten by config file)
-HM_FRITZ_IP="fritz.box fritz.repeater"
+
+# IP addresses/hostnames of FRITZ! devices
+HM_FRITZ_IP=${HM_FRITZ_IP:-"fritz.box fritz.repeater"}
 
 # IP address/hostname of CCU2
-HM_CCU_IP="homematic-ccu2.fritz.box"
+HM_CCU_IP=${HM_CCU_IP:-"homematic-ccu2.fritz.box"}
 
 # used names within variables
-HM_CCU_PRESENCE_USER="Nutzer"
-HM_CCU_PRESENCE_GUEST="Gast"
-HM_CCU_PRESENCE_NOBODY="Niemand"
-HM_CCU_PRESENCE_PRESENT="anwesend"
-HM_CCU_PRESENCE_AWAY="abwesend"
+HM_CCU_PRESENCE_USER=${HM_CCU_PRESENCE_USER:-"Nutzer"}
+HM_CCU_PRESENCE_GUEST=${HM_CCU_PRESENCE_GUEST:-"Gast"}
+HM_CCU_PRESENCE_NOBODY=${HM_CCU_PRESENCE_NOBODY:-"Niemand"}
+HM_CCU_PRESENCE_PRESENT=${HM_CCU_PRESENCE_PRESENT:-"anwesend"}
+HM_CCU_PRESENCE_AWAY=${HM_CCU_PRESENCE_AWAY:-"abwesend"}
 
 # Name of a CCU variable we set for signaling general presence
-HM_CCU_PRESENCE_VAR="Anwesenheit"
-HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
-HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.string"
-HM_CCU_PRESENCE_VAR_USER="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}"
-HM_CCU_PRESENCE_VAR_GUEST="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}"
+HM_CCU_PRESENCE_VAR=${HM_CCU_PRESENCE_VAR:-"Anwesenheit"}
+HM_CCU_PRESENCE_VAR_LIST=${HM_CCU_PRESENCE_VAR_LIST:-"${HM_CCU_PRESENCE_VAR}.list"}
+HM_CCU_PRESENCE_VAR_STR=${HM_CCU_PRESENCE_VAR_STR:-"${HM_CCU_PRESENCE_VAR}.string"}
+HM_CCU_PRESENCE_VAR_USER=${HM_CCU_PRESENCE_VAR_USER:-"${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}"}
+HM_CCU_PRESENCE_VAR_GUEST=${HM_CCU_PRESENCE_VAR_GUEST:-"${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}"}
 
 # Specify mode of HM_KNOWN_LIST variable setting
 #
@@ -55,11 +56,15 @@ HM_CCU_PRESENCE_VAR_GUEST="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}"
 #         FRITZ! device)
 # all   - apply known ignore list to all devices
 # off   - disabled guest recognition
-HM_KNOWN_LIST_MODE=guest
+HM_KNOWN_LIST_MODE=${HM_KNOWN_LIST_MODE:-"guest"}
 
 # MAC/IP addresses of other known devices (all others will be
 # recognized as guest devices
-HM_KNOWN_LIST=""
+HM_KNOWN_LIST=${HM_KNOWN_LIST:-""}
+
+# number of seconds to wait between iterations
+# (will run hm_pdetect in an endless loop)
+HM_REEXEC_WAITTIME=${HM_REEXEC_WAITTIME:-}
 
 # global return status variables
 RETURN_FAILURE=1
@@ -99,15 +104,6 @@ fi
 declare -A HM_USER_LIST     # username<>MAC/IP tuple
 declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
 declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
-
-# lets source in the user defined config file
-if [ $# -gt 0 ]; then
-  source "$1"
-elif [ -e "${0%/*}/${CONFIG_FILE}" ]; then
-  source "${0%/*}/${CONFIG_FILE}"
-else
-  echo "WARNING: config file ${CONFIG_FILE} doesn't exist. Using default values."
-fi
 
 # function returning the current state of a homematic variable
 # and returning success/failure if the variable was found/not
@@ -294,7 +290,7 @@ function retrieveFritzBoxDeviceList()
   if [ -z "${sid}" ] || [ "${sid}" == "0000000000000000" ]; then
     echo
     echo "ERROR: username or password incorrect."
-    exit ${RETURN_FAILURE}
+    return ${RETURN_FAILURE}
   fi
 
   # retrieve the network device list from the fritzbox using a
@@ -448,202 +444,253 @@ function whichEnumID()
 # main processing starts here
 #
 
-echo "hm_pdetect 0.7 - a FRITZ!-based HomeMatic presence detection script"
-echo "(Jan 27 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect 0.8 - a FRITZ!-based HomeMatic presence detection script"
+echo "(Feb 01 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
-
-# lets retrieve all mac<>ip addresses of currently
-# active devices in our network
-echo -n "Querying FRITZ! devices:"
-i=0
-for ip in ${HM_FRITZ_IP[@]}; do
-  echo -n " ${ip}"
-  retrieveFritzBoxDeviceList ${ip} ${HM_FRITZ_USER} ${HM_FRITZ_SECRET}
-  if [ $? -eq 0 ]; then
-    ((i = i + 1))
-  fi
-done
-
-# check that we were able to connect to at least one device
-if [ ${i} -eq 0 ]; then
-  echo "ERROR: couldn't connect to any specified FRITZ! device."
-  exit ${RETURN_FAILUE}
+# lets check for the config file definition
+if [ $# -gt 0 ]; then
+  CONFIG_FILE="${1}"
+elif [ -e "${0%/*}/${CONFIG_FILE}" ]; then
+  CONFIG_FILE="${0%/*}/${CONFIG_FILE}"
 fi
 
-# output some statistics
-echo
-echo " Normal-WiFi devices active: ${#normalDeviceList[@]}"
-echo " Guest-WiFi devices active: ${#guestDeviceList[@]}"
+if [ ! -e ${CONFIG_FILE} ]; then
+  echo "WARNING: config file '${CONFIG_FILE}' doesn't exist. Using default values."
+  CONFIG_FILE=
+fi
 
-# lets identify user presence
-presenceList=""
-echo "Checking user presence: "
-for user in "${!HM_USER_LIST[@]}"; do
-  echo -n " ${user}: "
-  stat="false"
+# lets enter an endless loop to implement a
+# daemon-like behaviour
+result=-1
+while true; do
 
-  # prepare the device list of the user as a regex
-  userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
-
-  # match MAC address and IP address in normal and guest WiFi
-  if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} ]] || \
-     [[ ${guestDeviceList[@]}   =~ ${userDeviceList^^} ]] || \
-     [[ ${!normalDeviceList[@]} =~ ${userDeviceList^^} ]] || \
-     [[ ${!guestDeviceList[@]}  =~ ${userDeviceList^^} ]]; then
-    stat="true"
-  fi
-
-  if [ "${stat}" == "true" ]; then
-    echo present
-    if [ -n "${presenceList}" ]; then
-      presenceList+=","
+  # lets wait until the next execution round in case
+  # the user wants to run it as a daemon
+  if [ ${result} -ge 0 ]; then
+    if [ -n "${HM_REEXEC_WAITTIME}" ] && [ ${HM_REEXEC_WAITTIME} -gt 0 ]; then
+      sleep ${HM_REEXEC_WAITTIME}
+      if [ $? -eq 1 ]; then
+        result=${RETURN_FAILURE}
+        break
+      fi
+    else 
+      break
     fi
-    presenceList+=${user}
-  else
-    echo away
   fi
 
-  # remove checked user devices from deviceList so that
-  # they are not recognized as guest devices
-  for device in ${HM_USER_LIST[${user}]}; do
+  # define success at the very beginning of each
+  # iteration
+  result=${RETURN_SUCCESS}
+
+  # output time/date of execution
+  echo "== $(date) ==================================="
+
+  # lets source the config file
+  if [ -n "${CONFIG_FILE}" ]; then
+    source "${CONFIG_FILE}"
+    if [ $? -ne 0 ]; then
+      echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
+      result=${RETURN_FAILURE}
+      continue
+    fi
+  fi
+
+  # lets retrieve all mac<>ip addresses of currently
+  # active devices in our network
+  echo -n "Querying FRITZ! devices:"
+  i=0
+  for ip in ${HM_FRITZ_IP[@]}; do
+    echo -n " ${ip}"
+    retrieveFritzBoxDeviceList ${ip} ${HM_FRITZ_USER} ${HM_FRITZ_SECRET}
+    if [ $? -eq 0 ]; then
+      ((i = i + 1))
+    fi
+  done
+  
+  # check that we were able to connect to at least one device
+  if [ ${i} -eq 0 ]; then
+    echo "ERROR: couldn't connect to any specified FRITZ! device."
+    result=${RETURN_FAILURE}
+    continue
+  fi
+
+  # output some statistics
+  echo
+  echo " Normal-WiFi devices active: ${#normalDeviceList[@]}"
+  echo " Guest-WiFi devices active: ${#guestDeviceList[@]}"
+  
+  # lets identify user presence
+  presenceList=""
+  echo "Checking user presence: "
+  for user in "${!HM_USER_LIST[@]}"; do
+    echo -n " ${user}: "
+    stat="false"
+  
+    # prepare the device list of the user as a regex
+    userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
+  
+    # match MAC address and IP address in normal and guest WiFi
+    if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} ]] || \
+       [[ ${guestDeviceList[@]}   =~ ${userDeviceList^^} ]] || \
+       [[ ${!normalDeviceList[@]} =~ ${userDeviceList^^} ]] || \
+       [[ ${!guestDeviceList[@]}  =~ ${userDeviceList^^} ]]; then
+      stat="true"
+    fi
+  
+    if [ "${stat}" == "true" ]; then
+      echo present
+      if [ -n "${presenceList}" ]; then
+        presenceList+=","
+      fi
+      presenceList+=${user}
+    else
+      echo away
+    fi
+  
+    # remove checked user devices from deviceList so that
+    # they are not recognized as guest devices
+    for device in ${HM_USER_LIST[${user}]}; do
+      # try to match MAC address first
+      if [[ ${!normalDeviceList[@]} =~ ${device^^} ]]; then
+        unset normalDeviceList[${device^^}]
+      elif [[ ${!guestDeviceList[@]} =~ ${device^^} ]]; then
+        unset guestDeviceList[${device^^}]
+      else
+        # now match the IP address list instead
+        if [[ ${normalDeviceList[@]} =~ ${device^^} ]]; then
+          for dev in ${!normalDeviceList[@]}; do
+            if [ ${normalDeviceList[${dev}]} == ${device^^} ]; then
+              unset normalDeviceList[${dev}]
+              break
+            fi
+          done
+        elif [[ ${guestDeviceList[@]} =~ ${device^^} ]]; then
+          for dev in ${!guestDeviceList[@]}; do
+            if [ ${guestDeviceList[${dev}]} == ${device^^} ]; then
+              unset guestDeviceList[${dev}]
+              break
+            fi
+          done
+        fi
+      fi
+    done
+  
+    # set status in homematic CCU
+    createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool "${user} @ home"
+    setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
+  done
+  
+  # now we set a separate users presence variable to true/false in case
+  # any defined user is present
+  if [ -n "${HM_CCU_PRESENCE_VAR_USER}" ]; then
+    createVariable ${HM_CCU_PRESENCE_VAR_USER} bool "any user @ home"
+    if [ -n "${presenceList}" ]; then
+      setVariableState ${HM_CCU_PRESENCE_VAR_USER} true
+    else
+      setVariableState ${HM_CCU_PRESENCE_VAR_USER} false
+    fi
+  fi
+  
+  # lets identify guests by checking the normal and guest
+  # wifi device list and comparing them to the HM_KNOWN_LIST
+  HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
+  for device in ${HM_KNOWN_LIST[@]}; do
+  
     # try to match MAC address first
-    if [[ ${!normalDeviceList[@]} =~ ${device^^} ]]; then
-      unset normalDeviceList[${device^^}]
-    elif [[ ${!guestDeviceList[@]} =~ ${device^^} ]]; then
-      unset guestDeviceList[${device^^}]
+    if [[ ${!normalDeviceList[@]} =~ ${device} ]]; then
+      unset normalDeviceList[${device}]
+    elif [[ ${!guestDeviceList[@]} =~ ${device} ]]; then
+      unset guestDeviceList[${device}]
     else
       # now match the IP address list instead
-      if [[ ${normalDeviceList[@]} =~ ${device^^} ]]; then
+      if [[ ${normalDeviceList[@]} =~ ${device} ]]; then
         for dev in ${!normalDeviceList[@]}; do
-          if [ ${normalDeviceList[${dev}]} == ${device^^} ]; then
+          if [ ${normalDeviceList[${dev}]} == ${device} ]; then
             unset normalDeviceList[${dev}]
             break
           fi
         done
-      elif [[ ${guestDeviceList[@]} =~ ${device^^} ]]; then
+      elif [[ ${guestDeviceList[@]} =~ ${device} ]]; then
         for dev in ${!guestDeviceList[@]}; do
-          if [ ${guestDeviceList[${dev}]} == ${device^^} ]; then
+          if [ ${guestDeviceList[${dev}]} == ${device} ]; then
             unset guestDeviceList[${dev}]
             break
           fi
         done
       fi
     fi
+  
   done
-
-  # set status in homematic CCU
-  createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool "${user} @ home"
-  setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
-
-done
-
-# now we set a separate users presence variable to true/false in case
-# any defined user is present
-if [ -n "${HM_CCU_PRESENCE_VAR_USER}" ]; then
-  createVariable ${HM_CCU_PRESENCE_VAR_USER} bool "any user @ home"
-  if [ -n "${presenceList}" ]; then
-    setVariableState ${HM_CCU_PRESENCE_VAR_USER} true
-  else
-    setVariableState ${HM_CCU_PRESENCE_VAR_USER} false
+  
+  # depending on the HM_KNOWN_LIST_MODE mode we populate the guestList
+  # with devices from the normalDeviceList and guestDeviceList or
+  # just from the guestDeviceList
+  guestList=()
+  if [ ${HM_KNOWN_LIST_MODE} != "guest" ]; then
+    for device in ${!normalDeviceList[@]}; do
+      guestList+=(${device})
+    done
   fi
-fi
-
-# lets identify guests by checking the normal and guest
-# wifi device list and comparing them to the HM_KNOWN_LIST
-HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
-for device in ${HM_KNOWN_LIST[@]}; do
-
-  # try to match MAC address first
-  if [[ ${!normalDeviceList[@]} =~ ${device} ]]; then
-    unset normalDeviceList[${device}]
-  elif [[ ${!guestDeviceList[@]} =~ ${device} ]]; then
-    unset guestDeviceList[${device}]
-  else
-    # now match the IP address list instead
-    if [[ ${normalDeviceList[@]} =~ ${device} ]]; then
-      for dev in ${!normalDeviceList[@]}; do
-        if [ ${normalDeviceList[${dev}]} == ${device} ]; then
-          unset normalDeviceList[${dev}]
-          break
-        fi
-      done
-    elif [[ ${guestDeviceList[@]} =~ ${device} ]]; then
-      for dev in ${!guestDeviceList[@]}; do
-        if [ ${guestDeviceList[${dev}]} == ${device} ]; then
-          unset guestDeviceList[${dev}]
-          break
-        fi
-      done
-    fi
-  fi
-
-done
-
-# depending on the HM_KNOWN_LIST_MODE mode we populate the guestList
-# with devices from the normalDeviceList and guestDeviceList or
-# just from the guestDeviceList
-guestList=()
-if [ ${HM_KNOWN_LIST_MODE} != "guest" ]; then
-  for device in ${!normalDeviceList[@]}; do
+  for device in ${!guestDeviceList[@]}; do
     guestList+=(${device})
   done
-fi
-for device in ${!guestDeviceList[@]}; do
-  guestList+=(${device})
+  
+  echo "Checking guest presence: "
+  # create/set presence system variable in CCU if guest devices
+  # were found
+  echo -n " ${HM_CCU_PRESENCE_GUEST}: "
+  if [ -n "${HM_CCU_PRESENCE_VAR_GUEST}" ] && [ ${HM_KNOWN_LIST_MODE} != "off" ]; then
+    if [ ${#guestList[@]} -gt 0 ]; then
+      # set status in homematic CCU
+      echo "present - ${#guestList[@]} (${guestList[@]})"
+      createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
+      setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} true
+      if [ -n "${presenceList}" ]; then
+        presenceList+=","
+      fi
+      presenceList+="${HM_CCU_PRESENCE_GUEST}"
+    else
+      echo "away"
+      createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
+      setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} false
+    fi
+  else
+    echo "disabled"
+  fi
+  
+  # we create and set another global presence variable as an
+  # enum of all possible presence combinations
+  if [ -n "${HM_CCU_PRESENCE_VAR_LIST}" ]; then
+    userList="${!HM_USER_LIST[@]}"
+    userTupleList=$(createUserTupleList "${userList}")
+    createVariable ${HM_CCU_PRESENCE_VAR_LIST} enum "presence enum list @ home" ${userTupleList}
+    setVariableState ${HM_CCU_PRESENCE_VAR_LIST} $(whichEnumID ${userTupleList} ${presenceList})
+  fi
+  
+  # we create and set a global presence variable as a string
+  # variable which users can query.
+  if [ -n "${HM_CCU_PRESENCE_VAR_STR}" ]; then
+    if [ -z "${presenceList}" ]; then
+      userList="${HM_CCU_PRESENCE_NOBODY}"
+    else
+      userList="${presenceList}"
+    fi
+    createVariable ${HM_CCU_PRESENCE_VAR_STR} string "presence list @ home"
+    setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${userList}\'
+  fi
+  
+  # set the global presence variable to true/false depending
+  # on the general presence of people in the house
+  createVariable ${HM_CCU_PRESENCE_VAR} bool "global presence @ home"
+  if [ -z "${presenceList}" ]; then
+    setVariableState ${HM_CCU_PRESENCE_VAR} false
+  else
+    setVariableState ${HM_CCU_PRESENCE_VAR} true
+  fi
+  
+  echo "== $(date) ==================================="
+  echo
 done
 
-echo "Checking guest presence: "
-# create/set presence system variable in CCU if guest devices
-# were found
-echo -n " ${HM_CCU_PRESENCE_GUEST}: "
-if [ -n "${HM_CCU_PRESENCE_VAR_GUEST}" ] && [ ${HM_KNOWN_LIST_MODE} != "off" ]; then
-  if [ ${#guestList[@]} -gt 0 ]; then
-    # set status in homematic CCU
-    echo "present - ${#guestList[@]} (${guestList[@]})"
-    createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-    setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} true
-    if [ -n "${presenceList}" ]; then
-      presenceList+=","
-    fi
-    presenceList+="${HM_CCU_PRESENCE_GUEST}"
-  else
-    echo "away"
-    createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-    setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} false
-  fi
-else
-  echo "disabled"
-fi
-
-# we create and set another global presence variable as an
-# enum of all possible presence combinations
-if [ -n "${HM_CCU_PRESENCE_VAR_LIST}" ]; then
-  userList="${!HM_USER_LIST[@]}"
-  userTupleList=$(createUserTupleList "${userList}")
-  createVariable ${HM_CCU_PRESENCE_VAR_LIST} enum "presence enum list @ home" ${userTupleList}
-  setVariableState ${HM_CCU_PRESENCE_VAR_LIST} $(whichEnumID ${userTupleList} ${presenceList})
-fi
-
-# we create and set a global presence variable as a string
-# variable which users can query.
-if [ -n "${HM_CCU_PRESENCE_VAR_STR}" ]; then
-  if [ -z "${presenceList}" ]; then
-    userList="${HM_CCU_PRESENCE_NOBODY}"
-  else
-    userList="${presenceList}"
-  fi
-  createVariable ${HM_CCU_PRESENCE_VAR_STR} string "presence list @ home"
-  setVariableState ${HM_CCU_PRESENCE_VAR_STR} \'${userList}\'
-fi
-
-# set the global presence variable to true/false depending
-# on the general presence of people in the house
-createVariable ${HM_CCU_PRESENCE_VAR} bool "global presence @ home"
-if [ -z "${presenceList}" ]; then
-  setVariableState ${HM_CCU_PRESENCE_VAR} false
-else
-  setVariableState ${HM_CCU_PRESENCE_VAR} true
-fi
-
-exit ${RETURN_SUCCESS}
+exit ${result}
