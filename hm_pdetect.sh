@@ -22,33 +22,6 @@
 # https://github.com/jollyjinx/homematic
 # https://github.com/max2play/webinterface
 #
-# Version history:
-# 0.1 (2015-03-02): - initial release
-# 0.2 (2015-03-06): - fixed bug in match for multiple user devices.
-# 0.3 (2015-03-06): - fixed bug where user devices were identified as guest devices
-# 0.4 (2015-06-15): - added functionality to generate an additional enum list and
-#                     large general rework to have more stability fo querying and
-#                     setting CCU variables
-# 0.5 (2015-09-13): - added dependency checks to make sure all required third-party
-#                     tools are installed and have proper versions.
-# 0.6 (2015-12-03): - removed awk dependency and improved BASH version check
-#                   - changed the device query to use query.lua instead
-# 0.7 (2016-01-27): - device comparisons changed to be case insensitive.
-#                   - an alternative config file can now be specified as a
-#                     commandline option.
-#                   - changed list variable to be of type 'string' to be more
-#                     flexible.
-#                   - the enum variable is now called "Anwesenheit.enum" per
-#                     default and should be fixed compared to version 0.6.
-#                   - added login/password check for fritzbox login procedure.
-#                   - introduced HM_KNOWN_LIST_MODE functionality to query guest
-#                     WiFi status of devices.
-#                   - connection to FRITZ! devices can now be performed with https://
-#                     protocol as well (have to be specified in HM_FRITZ_IP)
-#                   - replaced 'sed' tool dependency by replacing all uses with
-#                     equivalent bash regexp statements.
-#                   - removed 'nc' tool dependency by using wget instead.
-#
 
 CONFIG_FILE="hm_pdetect.conf"
 
@@ -61,16 +34,19 @@ HM_FRITZ_IP="fritz.box fritz.repeater"
 # IP address/hostname of CCU2
 HM_CCU_IP="homematic-ccu2.fritz.box"
 
-# Name of a CCU variable we set for signaling general presence
-HM_CCU_PRESENCE_VAR="Anwesenheit"
-HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
-HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.string"
-
 # used names within variables
+HM_CCU_PRESENCE_USER="Nutzer"
 HM_CCU_PRESENCE_GUEST="Gast"
 HM_CCU_PRESENCE_NOBODY="Niemand"
 HM_CCU_PRESENCE_PRESENT="anwesend"
 HM_CCU_PRESENCE_AWAY="abwesend"
+
+# Name of a CCU variable we set for signaling general presence
+HM_CCU_PRESENCE_VAR="Anwesenheit"
+HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
+HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.string"
+HM_CCU_PRESENCE_VAR_USER="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}"
+HM_CCU_PRESENCE_VAR_GUEST="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}"
 
 # Specify mode of HM_KNOWN_LIST variable setting
 #
@@ -78,6 +54,7 @@ HM_CCU_PRESENCE_AWAY="abwesend"
 #         guest WiFi only (requireѕ enabled guest WiFi in 
 #         FRITZ! device)
 # all   - apply known ignore list to all devices
+# off   - disabled guest recognition
 HM_KNOWN_LIST_MODE=guest
 
 # MAC/IP addresses of other known devices (all others will be
@@ -428,15 +405,18 @@ function createUserTupleList()
     tuples=${tuples//${i}/${Z}}
   done
 
-  # now add Guest to each tuple
-  IFS=';'
-  local guestTuples="${HM_CCU_PRESENCE_GUEST}"
-  for U in ${tuples}; do
-    guestTuples="${guestTuples};${U},${HM_CCU_PRESENCE_GUEST}"
-  done
-  IFS=' '
+  # now add "Guest" to each tuple (if not disabled)
+  local guestTuples=""
+  if [ -n "${HM_CCU_PRESENCE_VAR_GUEST}" ] && [ ${HM_KNOWN_LIST_MODE} != "off" ]; then
+    IFS=';'
+    guestTuples=";${HM_CCU_PRESENCE_GUEST}"
+    for U in ${tuples}; do
+      guestTuples="${guestTuples};${U},${HM_CCU_PRESENCE_GUEST}"
+    done
+    IFS=' '
+  fi
 
-  tuples="${HM_CCU_PRESENCE_NOBODY};${tuples};${guestTuples}"
+  tuples="${HM_CCU_PRESENCE_NOBODY};${tuples}${guestTuples}"
 
   echo "${tuples}"
 }
@@ -558,6 +538,17 @@ for user in "${!HM_USER_LIST[@]}"; do
 
 done
 
+# now we set a separate users presence variable to true/false in case
+# any defined user is present
+if [ -n "${HM_CCU_PRESENCE_VAR_USER}" ]; then
+  createVariable ${HM_CCU_PRESENCE_VAR_USER} bool "any user @ home"
+  if [ -n "${presenceList}" ]; then
+    setVariableState ${HM_CCU_PRESENCE_VAR_USER} true
+  else
+    setVariableState ${HM_CCU_PRESENCE_VAR_USER} false
+  fi
+fi
+
 # lets identify guests by checking the normal and guest
 # wifi device list and comparing them to the HM_KNOWN_LIST
 HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
@@ -606,19 +597,23 @@ echo "Checking guest presence: "
 # create/set presence system variable in CCU if guest devices
 # were found
 echo -n " ${HM_CCU_PRESENCE_GUEST}: "
-if [ ${#guestList[@]} -gt 0 ]; then
-  # set status in homematic CCU
-  echo "present - ${#guestList[@]} (${guestList[@]})"
-  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-  setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
-  if [ -n "${presenceList}" ]; then
-    presenceList+=","
+if [ -n "${HM_CCU_PRESENCE_VAR_GUEST}" ] && [ ${HM_KNOWN_LIST_MODE} != "off" ]; then
+  if [ ${#guestList[@]} -gt 0 ]; then
+    # set status in homematic CCU
+    echo "present - ${#guestList[@]} (${guestList[@]})"
+    createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
+    setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} true
+    if [ -n "${presenceList}" ]; then
+      presenceList+=","
+    fi
+    presenceList+="${HM_CCU_PRESENCE_GUEST}"
+  else
+    echo "away"
+    createVariable ${HM_CCU_PRESENCE_VAR_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
+    setVariableState ${HM_CCU_PRESENCE_VAR_GUEST} false
   fi
-  presenceList+="${HM_CCU_PRESENCE_GUEST}"
 else
-  echo "away"
-  createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-  setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
+  echo "disabled"
 fi
 
 # we create and set another global presence variable as an
