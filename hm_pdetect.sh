@@ -23,6 +23,9 @@
 # https://github.com/max2play/webinterface
 #
 
+VERSION="0.8"
+VERSION_DATE="Feb 01 2016"
+
 #####################################################
 # Main script starts here, don't modify
 # default settings (overwritten by config file)
@@ -811,8 +814,8 @@ function run_pdetect()
 ################################################
 # main processing starts here
 #
-echo "hm_pdetect 0.8 - a FRITZ!-based HomeMatic presence detection script"
-echo "(Feb 02 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "hm_pdetect ${VERSION} - a FRITZ!-based HomeMatic presence detection script"
+echo "(${VERSION_DATE}) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 # lets enter an endless loop to implement a
