@@ -5,14 +5,46 @@ ADDONDIR=/usr/local/addons/${ADDONNAME}
 WWWDIR=/usr/local/etc/config/addons/www/${ADDONNAME}
 RCDDIR=/usr/local/etc/config/rc.d
 
+# function that starts hm_pdetect as a daemon
+start() {
+  # default settings (will be overwritten by config file)
+  export HM_PROCESSLOG_FILE="/var/log/hm_pdetect.log"
+  export HM_INTERVAL_TIME=15
+  export CONFIG_FILE="${ADDONDIR}/etc/hm_pdetect.conf"
+
+  # set path settings to let it search in the bin directory as well.
+  export PATH="${ADDONDIR}/bin:${PATH}"
+
+  # run hm_pdetect in daemon mode
+  ${ADDONDIR}/bin/hm_pdetect.sh start >/dev/null 2>&1
+}
+
+# function that stops/kills hm_pdetect
+stop() {
+  # default settings (will be overwritten by config file)
+  export CONFIG_FILE="${ADDONDIR}/etc/hm_pdetect.conf"
+
+  # set path settings to let it search in the bin directory as well.
+  export PATH="${ADDONDIR}/bin:${PATH}"
+
+  # stop/kill hm_pdetect
+  ${ADDONDIR}/bin/hm_pdetect.sh stop >/dev/null 2>&1
+}
+
 case "$1" in
 
   ""|start)
-    # add our cronjob definitions so that hm_pdetect is executed
-    # regularly.
-    if ! grep -Fq "${ADDONDIR}/run.sh" /usr/local/crontabs/root; then
-      (crontab -l ; echo "*/1 * * * * ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 15; ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 30; ${ADDONDIR}/run.sh 2>&1 >/dev/null" ; echo "*/1 * * * * sleep 45; ${ADDONDIR}/run.sh 2>&1 >/dev/null") 2>&1 | grep -v "no crontab" | sort | uniq | crontab -
-    fi
+    start
+    ;;
+
+  stop)
+    stop
+    ;;
+
+  restart|reload)
+    stop
+    sleep 2
+    start
     ;;
 
   info)
@@ -21,14 +53,14 @@ case "$1" in
     echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
     echo "Version: $(cat ${WWWDIR}/VERSION)"
     echo "Name: hm_pdetect"
-    echo "Operations: uninstall"
+    echo "Operations: uninstall restart"
     echo "Config-Url: /addons/${ADDONNAME}/"
     echo "Update: /addons/${ADDONNAME}/update-check.cgi"
     ;;
 
   uninstall)
-    # remove all cronjob occurances regarding hm_pdetect
-    (crontab -l) 2>&1 | grep -v "no crontab" | grep -v "${ADDONDIR}/run.sh" | sort | uniq | crontab -
+    # make sure to stop hm_pdetect
+    stop
 
     # remove the addon button
     ${ADDONDIR}/bin/update_addon hm_pdetect
@@ -39,4 +71,11 @@ case "$1" in
     rm -f ${RCDDIR}/${ADDONNAME}
     ;;
 
+  *)
+    echo "Usage: hm_pdetect {start|stop|restart|info|uninstall}" >&2
+    exit 1
+    ;;
+
 esac
+
+exit $?

@@ -47,4 +47,10 @@ ln -sf ${ADDON_DIR}/www ${WWW_DIR}
 touch /usr/local/etc/config/hm_addons.cfg
 ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/hm_pdetect-addon.cfg
 
+# make sure to remove any hm_pdetect cronjobs
+# since this is not required since 0.8+ anymore
+if [ -x /usr/bin/crontab ]; then
+  (crontab -l) 2>&1 | grep -v "no crontab" | grep -v "${ADDON_DIR}/run.sh" | sort | uniq | crontab -
+fi
+
 sync
