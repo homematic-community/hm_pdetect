@@ -843,7 +843,7 @@ while true; do
 
   # perform one pdetect run and in case we are running in daemon
   # mode and having the processlogfile enabled output to the logfile instead.
-  if [[ ${PROCESS_MODE} == "daemon" && -n ${HM_PROCESSLOG_FILE} ]]; then
+  if [[ -n ${HM_PROCESSLOG_FILE} ]]; then
     output=$(run_pdetect)
     result=$?
     echo "${output}" | cat - ${HM_PROCESSLOG_FILE} | head -n ${HM_PROCESSLOG_MAXLINES} >/tmp/hm_pdetect-$$.tmp && mv /tmp/hm_pdetect-$$.tmp ${HM_PROCESSLOG_FILE}
