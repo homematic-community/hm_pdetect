@@ -846,7 +846,7 @@ while true; do
   if [[ ${PROCESS_MODE} == "daemon" && -n ${HM_PROCESSLOG_FILE} ]]; then
     output=$(run_pdetect)
     result=$?
-    echo "${output}" | cat - ${HM_PROCESSLOG_FILE} | head -n ${HM_PROCESSLOG_MAXLINES} >/tmp/hm_pdetect.tmp && mv /tmp/hm_pdetect.tmp ${HM_PROCESSLOG_FILE}
+    echo "${output}" | cat - ${HM_PROCESSLOG_FILE} | head -n ${HM_PROCESSLOG_MAXLINES} >/tmp/hm_pdetect-$$.tmp && mv /tmp/hm_pdetect-$$.tmp ${HM_PROCESSLOG_FILE}
   else
     # run pdetect with normal stdout processing
     run_pdetect
