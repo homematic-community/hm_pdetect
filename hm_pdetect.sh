@@ -118,6 +118,7 @@ fi
 declare -A HM_USER_LIST     # username<>MAC/IP tuple
 declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
 declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
+declare -A sidStorage       # IP<>SID tuple
 
 ###############################
 # lets check if config file was specified as a cmdline arg
@@ -335,21 +336,10 @@ function createVariable()
   fi
 }
 
-# function that logs into a FRITZ! device and stores the MAC and IP address of all devices
-# in an associative array which have to bre created before calling this function
-function retrieveFritzBoxDeviceList()
+# function that gets a new sessionID for connecting to a FRITZ! device
+function getSessionID()
 {
-  local ip=$1
-  local user=$2
-  local secret=$3
-
-  # check if "ip" starts with a "http(s)://" URL scheme
-  # identifier or if we have to add it ourself
-  if [[ ! ${ip} =~ ^http(s)?:\/\/ ]]; then
-    uri="http://${ip}"
-  else
-    uri=${ip}
-  fi
+  local uri=$1
 
   # retrieve login challenge
   local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua")
@@ -387,12 +377,80 @@ function retrieveFritzBoxDeviceList()
     return ${RETURN_FAILURE}
   fi
 
+  echo ${sid}
+  return ${RETURN_SUCCESS}
+}
+
+# function to retrieve the current device list registered
+# with a FRITZ! devices. This is performed by using query.lua
+# and will return the name, ip, mac, guest status and active status
+# of devices registerd at the WiFi/LAN of a FRITZ! device
+function getDeviceList()
+{
+  local uri=$1
+  local sid=$2
+  local devices=
+
   # retrieve the network device list from the fritzbox using a
   # specific call to query.lua so that we get our information without
   # having to parse HTML portions.
-  local devices=$(wget -q -O - --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)")
+  devices=$(wget -q -O - --max-redirect=0 --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)")
+  if [ $? -ne 0 ] || [ -z "${devices}" ]; then
+    return ${RETURN_FAILURE}
+  fi
 
-  #echo "devices: '${devices}'"
+  echo "${devices}"
+  return ${RETURN_SUCCESS}
+}
+
+# function that logs into a FRITZ! device and stores the MAC and IP address of all devices
+# in an associative array which have to bre created before calling this function
+function retrieveFritzBoxDeviceList()
+{
+  local ip=$1
+  local user=$2
+  local secret=$3
+  local uri=${ip}
+
+  # check if "ip" starts with a "http(s)://" URL scheme
+  # identifier or if we have to add it ourself
+  if [[ ! ${ip} =~ ^http(s)?:\/\/ ]]; then
+    uri="http://${ip}"
+  fi
+
+  # retrieve the network device list from the fritzbox using a
+  # specific call to query.lua so that we get our information without
+  # having to parse HTML portions. we first try this with our
+  local devices=
+  local res=1
+  local sid=${sidStorage[${ip}]}
+  if [ -n "${sid}" ]; then
+    devices=$(getDeviceList "${uri}" ${sid})
+    res=$?
+  fi
+  if [ ${res} -ne 0 ] || [ -z "${devices}" ]; then
+    # the first iteration with the sid of the
+    # last iteration didn't work out so lets
+    # generate a new one
+    sid=$(getSessionID "${uri}")
+    if [ $? -ne 0 ]; then
+      echo "${sid}"
+      return ${RETURN_FAILURE}
+    fi
+    devices=$(getDeviceList "${uri}" ${sid})
+    res=$?
+  fi
+
+  # perform a last check
+  if [ ${res} -ne 0 ] || [ -z "${devices}" ]; then
+    echo
+    echo "ERROR: Couldn't retrieve device list."
+    return ${RETURN_FAILURE}
+  fi
+
+  # the SID succeeded so lets make this SID the
+  # new currently valid SID of this ip
+  sidStorage[${ip}]=${sid}
 
   # prepare the regular expressions
   local re_name="\"name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
@@ -454,6 +512,8 @@ function retrieveFritzBoxDeviceList()
   for (( i = 0; i < ${#maclist_guest[@]} ; i++ )); do
     guestDeviceList[${maclist_guest[$i]}]=${iplist_guest[$i]}
   done
+
+  return ${RETURN_SUCCESS}
 }
 
 # function that creates a list of tupels from an input string
