@@ -64,6 +64,10 @@ HM_KNOWN_LIST=${HM_KNOWN_LIST:-""}
 # (will run hm_pdetect in an endless loop)
 HM_INTERVAL_TIME=${HM_INTERVAL_TIME:-}
 
+# maximum number of iterations if running in interval mode
+# (default: 0=unlimited)
+HM_INTERVAL_MAX=${HM_INTERVAL_MAX:-0}
+
 # where to save the process ID in case hm_pdetect runs as
 # a daemon
 HM_DAEMON_PIDFILE=${HM_DAEMON_PIDFILE:-"/var/run/hm_pdetect.pid"}
@@ -810,18 +814,22 @@ function run_pdetect()
 # main processing starts here
 #
 echo "hm_pdetect 0.8 - a FRITZ!-based HomeMatic presence detection script"
-echo "(Feb 01 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(Feb 02 2016) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
 echo
 
 # lets enter an endless loop to implement a
 # daemon-like behaviour
 result=-1
+iteration=0
 while true; do
 
   # lets wait until the next execution round in case
   # the user wants to run it as a daemon
   if [ ${result} -ge 0 ]; then
-    if [ -n "${HM_INTERVAL_TIME}" ] && [ ${HM_INTERVAL_TIME} -gt 0 ]; then
+    ((iteration = iteration + 1))
+    if [ -n "${HM_INTERVAL_TIME}" ] && \
+       [ ${HM_INTERVAL_TIME} -gt 0 ] && \
+       ( [ -z "${HM_INTERVAL_MAX}" ] || [ ${HM_INTERVAL_MAX} -eq 0 ] || [ ${iteration} -lt ${HM_INTERVAL_MAX} ] ); then
       sleep ${HM_INTERVAL_TIME}
       if [ $? -eq 1 ]; then
         result=${RETURN_FAILURE}
