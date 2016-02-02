@@ -1,8 +1,8 @@
 <!DOCTYPE HTML>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta charset="ISO-8859-1">
+  <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1">
   <link rel="stylesheet" type="text/css" href="style.css" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,7 +31,7 @@
       </div>
    <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav ">
-        <li class="active"><a href="index.html">Ãœber</a></li>
+        <li class="active"><a href="index.html">Über</a></li>
         <li><a href="settings/logoutput.cgi">Logfile</a></li>
         <li><a href="settings/settings.cgi">Konfiguration</a></li>
       </ul>
@@ -43,32 +43,32 @@
 </div><!-- class="navbar ..." -->
 
 <div class="container center1 col-md-8" id="content"> 
-<legend>FRITZ!-basierte Anwesenheitserkennung fÃ¼r HomeMatic - hm_pdetect</legend>
+<legend>FRITZ!-basierte Anwesenheitserkennung für HomeMatic - hm_pdetect</legend>
 <div class="well well-s">
 <b>Allgemeines</b>
 <p>
-Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des WLAN/LAN-Status eines <a href="http://www.avm.de/">AVM FRITZ!</a> GerÃ¤tes (z.B. FRITZ!Box, FRITZ!Repeater) innerhalb einer <a href="http://www.homematic.com/">eQ3 HomeMatic</a> Umgebung umzusetzen. Anhand von registrierten MAC- bzw. IP-Adressen von GerÃ¤ten kÃ¶nnen diese einzelnen Personen zugeordnet werden. Anhand des WLAN/LAN-Status dieser GerÃ¤te (z.B. Smartphones) werden dann Systemvariablen innerhalb einer verbundenen CCU entsprechend gesetzt. GerÃ¤te die am Ende der Erkennung als unbekannt zugeordnet werden werden als GastgerÃ¤te identifiziert und entsprechend eine separate Variable gesetzt. Dies erlaubt dann die Identifizierung von GÃ¤sten im Haus um so z.B. die Heizung eines GÃ¤stzimmers entsprechend an/aus zu schalten. Die jeweils generierten Anwesenheitsvariablen kÃ¶nnen dann entsprechend in der CCU-Umgebung als normale Systemvariablen ausgewertet werden.
+Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des WLAN/LAN-Status eines <a href="http://www.avm.de/">AVM FRITZ!</a> Gerätes (z.B. FRITZ!Box, FRITZ!Repeater) innerhalb einer <a href="http://www.homematic.com/">eQ3 HomeMatic</a> Umgebung umzusetzen. Anhand von registrierten MAC- bzw. IP-Adressen von Geräten können diese einzelnen Personen zugeordnet werden. Anhand des WLAN/LAN-Status dieser Geräte (z.B. Smartphones) werden dann Systemvariablen innerhalb einer verbundenen CCU entsprechend gesetzt. Geräte die am Ende der Erkennung als unbekannt zugeordnet werden werden als Gastgeräte identifiziert und entsprechend eine separate Variable gesetzt. Dies erlaubt dann die Identifizierung von Gästen im Haus um so z.B. die Heizung eines Gästzimmers entsprechend an/aus zu schalten. Die jeweils generierten Anwesenheitsvariablen können dann entsprechend in der CCU-Umgebung als normale Systemvariablen ausgewertet werden.
 </p>
 
 <b>Funktionsumfang</b>
 <p>
 <ul>
-<li>WLAN/LAN-Statusabfrage mehrerer paralleler FRITZ!-GerÃ¤ten (FRITZ!Box/Repeater)</li>
+<li>WLAN/LAN-Statusabfrage mehrerer paralleler FRITZ!-Geräten (FRITZ!Box/Repeater)</li>
 <li>Intervalgetriebene Statusabfrage im Abstand von 15 Sekunden</li>
-<li>UnterstÃ¼tzung fÃ¼r FRITZ!Box/Repeater Zugang mit oder ohne Passwort im internen Netzwerk</li>
-<li>MÃ¶glichkeit der Remote-Abfrage Ã¼ber https-Zugang zu FRITZ!-GerÃ¤ten</li>
-<li>BerÃ¼cksichtigung eines separaten Gastzugang-WLAN</li>
-<li>NutzergerÃ¤tedefinitionen anhand der MAC- oder IP-Adresse</li>
-<li>Nutzern kÃ¶nnen mehrere GerÃ¤te fÃ¼r Anwesenheitserkennung zugeordnet werden</li>
+<li>Unterstützung für FRITZ!Box/Repeater Zugang mit oder ohne Passwort im internen Netzwerk</li>
+<li>Möglichkeit der Remote-Abfrage über https-Zugang zu FRITZ!-Geräten</li>
+<li>Berücksichtigung eines separaten Gastzugang-WLAN</li>
+<li>Nutzergerätedefinitionen anhand der MAC- oder IP-Adresse</li>
+<li>Nutzern können mehrere Geräte für Anwesenheitserkennung zugeordnet werden</li>
 <li>Automatisches Anlegen aller notwendigen CCU-Systemvariablen</li>
-<li>ZusÃ¤tzliche String- und Enum-Systemvariable zur komfortablen Darstellung des Anwesenheitsstatus aller Nutzer</li>
-<li>Gasterkennung anhand des Auftauchens unbekannter GerÃ¤te im Gastzugang-WLAN</li>
+<li>Zusätzliche String- und Enum-Systemvariable zur komfortablen Darstellung des Anwesenheitsstatus aller Nutzer</li>
+<li>Gasterkennung anhand des Auftauchens unbekannter Geräte im Gastzugang-WLAN</li>
 <li>Gasterkennung kann auf gesamte WLAN/LAN-Umgebung ausgedehnt werden</li>
-<li>Web-basierte Konfiguration Ã¼ber CCU-WebUI Zugang</li>
+<li>Web-basierte Konfiguration über CCU-WebUI Zugang</li>
 </ul>
 </p>
 
-<b>UnterstÃ¼tzte CCU Platformen</b>
+<b>Unterstützte CCU Platformen</b>
 
 <ul>
 <li>HomeMatic CCU1</li>
@@ -76,7 +76,7 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
 <li><a href="http://homematic-forum.de/forum/viewtopic.php?f=56&t=26917">RaspberryMatic</a></li>
 </ul>
 
-<b>UnterstÃ¼tzte FRITZ! Modelle</b>
+<b>Unterstützte FRITZ! Modelle</b>
 
 <ul>
 <li>Alle Modelle von FRITZ!Box und FRITZ!Repeater ab FRITZ!OS 6</li>
@@ -86,22 +86,22 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
 
 <ol>
   <li>Download des aktuellen Addon-Releases von <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
-  <li>Installation des Addon-Paketes (<code>hm_pdetect-X.X.tar.gz</code>) mittels WebUI OberflÃ¤che der CCU</li>
-  <li>Konfiguration der jeweiligen FRITZ!Box/Repeater (siehe nÃ¤chster Punkt)</li>
-  <li>Konfiguration des Addons Ã¼ber WebUI zugÃ¤ngliche <a href="settings/settings.cgi">Konfigurationswebseite</a></li>
+  <li>Installation des Addon-Paketes (<code>hm_pdetect-X.X.tar.gz</code>) mittels WebUI Oberfläche der CCU</li>
+  <li>Konfiguration der jeweiligen FRITZ!Box/Repeater (siehe nächster Punkt)</li>
+  <li>Konfiguration des Addons über WebUI zugängliche <a href="settings/settings.cgi">Konfigurationswebseite</a></li>
 </ol>
 
-<b>Konfiguration FRITZ!-GerÃ¤te</b>
+<b>Konfiguration FRITZ!-Geräte</b>
 
 <ol>
-  <li>Aufrufen der Webkonfiguration des jeweiligen FRITZ!-GerÃ¤tes (z.B. <a href="http://fritz.box/">http://fritz.box/</a>)
-  <li>Anlegen eines neuen Nutzers unter <i>System->FRITZ!Box-Benutzer->Benutzer hinzufÃ¼gen</i>
+  <li>Aufrufen der Webkonfiguration des jeweiligen FRITZ!-Gerätes (z.B. <a href="http://fritz.box/">http://fritz.box/</a>)
+  <li>Anlegen eines neuen Nutzers unter <i>System->FRITZ!Box-Benutzer->Benutzer hinzufügen</i>
   <ul>
-    <li>BeschrÃ¤nken der Rechte des neuen Nutzers auf <i>FRITZ!Box Einstellungen</i>
+    <li>Beschränken der Rechte des neuen Nutzers auf <i>FRITZ!Box Einstellungen</i>
   </ul>
   <li>Aufrufen der Heimnetz-Anmeldeeinstellungen <i>System->FRITZ!Box-Benutzer->Anmeldung im Heimnetz</i>
   <ul>
-    <li>Ã„ndern der Anmeldeeinstellungen auf <i>Anmeldung mit FRITZ!Box-Benuternamen und Kennwort</i>
+    <li>Ändern der Anmeldeeinstellungen auf <i>Anmeldung mit FRITZ!Box-Benuternamen und Kennwort</i>
   </ul>
 </ol>
 
@@ -109,7 +109,7 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
 <b>Support</b>
 
 <p>
-Bei Problemen/Bugs oder Ideen zur Weiterentwicklung bitte unter dem Github-Projekt ein Ticket <a href="https://github.com/jens-maus/hm_pdetect/issues">erstellen</a>. FÃ¼r Hilfe bei der Benutzung/Konfiguration des Addons kann man unter folgendem deutschsprachigen Forumbeitrag hilfe suchen: <a href="http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907">hm_pdetect</a>.
+Bei Problemen/Bugs oder Ideen zur Weiterentwicklung bitte unter dem Github-Projekt ein Ticket <a href="https://github.com/jens-maus/hm_pdetect/issues">erstellen</a>. Für Hilfe bei der Benutzung/Konfiguration des Addons kann man unter folgendem deutschsprachigen Forumbeitrag hilfe suchen: <a href="http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907">hm_pdetect</a>.
 </p>
 
 <b>Lizenz</b>
