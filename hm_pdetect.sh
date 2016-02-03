@@ -27,8 +27,12 @@ VERSION="0.8"
 VERSION_DATE="Feb 01 2016"
 
 #####################################################
-# Main script starts here, don't modify
-# default settings (overwritten by config file)
+# Main script starts here, don't modify from here on
+
+# before we read in default values we have to find
+# out which HM_* variables the user might have specified
+# on the command-line himself
+USERVARS=$(set | grep -e "HM_.*=")
 
 # IP addresses/hostnames of FRITZ! devices
 HM_FRITZ_IP=${HM_FRITZ_IP:-"fritz.box fritz.repeater"}
@@ -149,6 +153,10 @@ if [[ -n ${CONFIG_FILE} ]]; then
     echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
     exit ${RETURN_FAILURE}
   fi
+
+  # lets eval the user overridden variables
+  # so that they take priority
+  eval ${USERVARS}
 fi
 
 ###############################
@@ -822,6 +830,10 @@ while true; do
       echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
       result=${RETURN_FAILURE}
     fi
+
+    # lets eval the user overridden variables
+    # so that they take priority
+    eval ${USERVARS}
   fi
 
   # lets wait until the next execution round in case
