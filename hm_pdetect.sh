@@ -604,15 +604,6 @@ function run_pdetect()
   # output time/date of execution
   echo "== $(date) ==================================="
 
-  # lets source the config file (again)
-  if [[ -n ${CONFIG_FILE} ]]; then
-    source "${CONFIG_FILE}"
-    if [[ $? -ne 0 ]]; then
-      echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
-      return ${RETURN_FAILURE}
-    fi
-  fi
-
   # lets retrieve all mac<>ip addresses of currently
   # active devices in our network
   echo -n "Querying FRITZ! devices:"
@@ -823,6 +814,15 @@ echo
 result=-1
 iteration=0
 while true; do
+
+  # lets source the config file again
+  if [[ -n ${CONFIG_FILE} ]]; then
+    source "${CONFIG_FILE}"
+    if [[ $? -ne 0 ]]; then
+      echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
+      result=${RETURN_FAILURE}
+    fi
+  fi
 
   # lets wait until the next execution round in case
   # the user wants to run it as a daemon
