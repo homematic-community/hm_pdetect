@@ -9,7 +9,6 @@ RCDDIR=/usr/local/etc/config/rc.d
 start() {
   # default settings (will be overwritten by config file)
   export HM_PROCESSLOG_FILE="/var/log/hm_pdetect.log"
-  export HM_INTERVAL_TIME=15
   export CONFIG_FILE="${ADDONDIR}/etc/hm_pdetect.conf"
 
   # set path settings to let it search in the bin directory as well.
