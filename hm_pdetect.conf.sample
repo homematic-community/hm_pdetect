@@ -13,17 +13,35 @@ HM_CCU_PRESENCE_GUEST="Gast"
 HM_CCU_PRESENCE_NOBODY="Niemand"
 HM_CCU_PRESENCE_PRESENT="anwesend"
 HM_CCU_PRESENCE_AWAY="abwesend"
+HM_CCU_PRESENCE_LIST="list"
+HM_CCU_PRESENCE_STR="string"
 
 # Name of a CCU variable we set for signaling general presence
 HM_CCU_PRESENCE_VAR="Anwesenheit"
-HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.list"
-HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.string"
+HM_CCU_PRESENCE_VAR_LIST="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}"
+HM_CCU_PRESENCE_VAR_STR="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_STR}"
 HM_CCU_PRESENCE_VAR_USER="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}"
 HM_CCU_PRESENCE_VAR_GUEST="${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}"
 
 # number of seconds to wait between iterations
 # (will run hm_pdetect in an endless loop)
-HM_REEXEC_WAITTIME=
+HM_INTERVAL_TIME="15"
+
+# maximum number of iterations if running in interval mode
+# (default: 0=unlimited)
+HM_INTERVAL_MAX="0"
+
+# where to save the process ID in case hm_pdetect runs as
+# a daemon
+HM_DAEMON_PIDFILE="/tmp/hm_pdetect.pid"
+
+# Processing logfile output name
+# (default: no output)
+HM_PROCESSLOG_FILE=
+
+# maximum number of lines the logfile should contain
+# (default: 500 lines)
+HM_PROCESSLOG_MAXLINES="500"
 
 # MAC/IP addresses of user devices
 HM_USER_LIST=([John]=C9:85:51:8B:06:10 [Jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:D5')
