@@ -24,18 +24,67 @@ This CCU-Addon allows to implement a general home presence detection system with
 ## Supported FRITZ! models
 * All models of FRITZ!Box and FRITZ!Repeater running with FRITZ!OS 6 or newer
 
-## Installation CCU Addon
-1. Download of recent Addon-Release from [Github](https://github.com/jens-maus/hm_pdetect/releases)
-2. Installation of Addon archive (```hm_pdetect-X.X.tar.gz```) via WebUI interface of CCU device
-3. Configuration of FRITZ!Box/Repeater (see next section)
-4. Configuration of Addon using the WebUI accessible config pages
-
 ## Configuration FRITZ! device
 1. Open the web configuration of the individual FRITZ!-device (e.g. http://fritz.box/)
 2. Create a new dedicated user via *System->FRITZ!Box-User->Add User*
   * Restrict access rights of user to *FRITZ!Box Settings* only
 3. Open the Homenetwork-Login configuration at *System->FRITZ!Box-User->Login to Homenetwork*
   * Modify login setting to *Login with FRITZ!Box-Username and Password*
+
+## Installation as CCU Addon
+1. Download of recent Addon-Release from [Github](https://github.com/jens-maus/hm_pdetect/releases)
+2. Installation of Addon archive (```hm_pdetect-X.X.tar.gz```) via WebUI interface of CCU device
+3. Configuration of FRITZ!Box/Repeater (see next section)
+4. Configuration of Addon using the WebUI accessible config pages
+
+## Installation as stand-alone script on Linux-System (e.g. RaspberryPi)
+1. Create a new directory for hm_pdetect:
+
+        mkdir /opt/hm_pdetect
+
+2. Change to new directory: 
+
+        cd /opt/hm_pdetect
+
+3. Download latest hm_pdetect.sh:
+
+        wget https://github.com/jens-maus/hm_pdetect/raw/master/hm_pdetect.sh
+
+4. Download of sample config:
+
+        wget https://github.com/jens-maus/hm_pdetect/raw/master/hm_pdetect.conf.sample
+
+5. Rename sample config to active one:
+
+        mv hm_pdetect.conf.sample hm_pdetect.conf
+
+6. Modify configuration according to comments in config file:
+
+        vim hm_pdetect.conf
+
+7. Create a cronjob to start/restart hm_pdetect in daemon mode at midnight:
+
+        crontab -e
+
+8. Add the following line:
+
+        0 0 * * * /opt/hm_pdetect/hm_pdetect.sh restart
+
+9. Start hm_pdetect immediately in daemon-mode:
+
+        /opt/hm_pdetect/hm_pdetect.sh start
+
+
+## CUxD SystemExec use
+Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using a CUxD (www.cuxd.de) SystemExec call within HomeMatic scripts on the CCU following the following syntax:
+
+        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime>");
+ 
+Please note the &lt;iterations&gt; and &lt;waittime&gt; which allows to additionally specify how many times hm_pdetect should be executed with a certain amount of wait time in between. One example of such an execution can be:
+
+        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2");
+
+This will execute hm_pdetect for a total amount of 5 times with a waittime of 2 seconds between each execution.
 
 ## Support
 In case of problems/bugs or if you have any feature requests please feel free to open a [new ticket](https://github.com/jens-maus/hm_pdetect/issues) at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: [hm_pdetect](http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907).
