@@ -32,7 +32,7 @@ VERSION_DATE="Feb 01 2016"
 # before we read in default values we have to find
 # out which HM_* variables the user might have specified
 # on the command-line himself
-USERVARS=$(set | grep -e "HM_.*=")
+USERVARS=$(set -o posix; set | grep "HM_.*=" 2>/dev/null)
 
 # IP addresses/hostnames of FRITZ! devices
 HM_FRITZ_IP=${HM_FRITZ_IP:-"fritz.box fritz.repeater"}
