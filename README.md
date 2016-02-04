@@ -3,10 +3,11 @@ This CCU-Addon allows to implement a general home presence detection system with
 
 ## Features
 * Querying of several FRITZ!-devices (FRITZ!Box/Repeater) in one run
-* interval-based querying of FRITZ!-devices (every 15 seconds)
-* Support of FRITZ!Box/Repeater local network login with and without password
+* User-definable interval for querying FRITZ!-devices regularly
+* Support for manually triggering execution via CUxD SystemExec calls.
+* Support for FRITZ!Box/Repeater local network login with and without password
 * Possibility to remotely query FRITZ!-devices via https
-* Support of querying a dedicated guest-WiFi network
+* Support for querying a dedicated guest-WiFi network
 * User device definition based on MAC and/or IP address
 * Possibility to define multiple devices per user
 * Automatically generates all necessary CCU system variables
@@ -40,7 +41,7 @@ This CCU-Addon allows to implement a general home presence detection system with
 In case of problems/bugs or if you have any feature requests please feel free to open a [new ticket](https://github.com/jens-maus/hm_pdetect/issues) at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: [hm_pdetect](http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907).
 
 ## License
-The use and development of this addon is based on the GPL open source license
+The use and development of this addon is based on version 3 of the LGPL open source license.
 
 ## Authors
 Copyright (c) 2015-2016 Jens Maus &lt;mail@jens-maus.de&gt;
