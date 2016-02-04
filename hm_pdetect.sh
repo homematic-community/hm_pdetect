@@ -24,7 +24,7 @@
 #
 
 VERSION="0.8"
-VERSION_DATE="Feb 01 2016"
+VERSION_DATE="Feb 04 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
