@@ -62,18 +62,11 @@ This CCU-Addon allows to implement a general home presence detection system with
 
         vim hm_pdetect.conf
 
-7. Create a cronjob to start/restart hm_pdetect in daemon mode at midnight:
+7. Execute hm_pdetect manually:
 
-        crontab -e
+        /opt/hm_pdetect/hm_pdetect.sh
 
-8. Add the following line:
-
-        0 0 * * * /opt/hm_pdetect/hm_pdetect.sh restart
-
-9. Start hm_pdetect immediately in daemon-mode:
-
-        /opt/hm_pdetect/hm_pdetect.sh start
-
+8. If you want to automatically start hm_pdetect on system startup a startup script
 
 ## CUxD SystemExec use
 Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using a CUxD (www.cuxd.de) SystemExec call within HomeMatic scripts on the CCU following the following syntax:
