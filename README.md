@@ -37,7 +37,7 @@ This CCU-Addon allows to implement a general home presence detection system with
 3. Configuration of FRITZ!Box/Repeater (see next section)
 4. Configuration of Addon using the WebUI accessible config pages
 
-## Installation as stand-alone script on Linux-System (e.g. RaspberryPi)
+## Manual Installation as stand-alone script (e.g. on RaspberryPi)
 1. Create a new directory for hm_pdetect:
 
         mkdir /opt/hm_pdetect
