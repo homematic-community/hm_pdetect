@@ -81,14 +81,6 @@ This CCU-Addon allows to implement a general home presence detection system with
 <li>All models of FRITZ!Box and FRITZ!Repeater running with FRITZ!OS 6 or newer</li>
 </ul>
 
-<b>Installation CCU Addon</b>
-<ol>
-  <li>Download of recent Addon-Release from <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
-  <li>Installation of Addon archive (<code>hm_pdetect-X.X.tar.gz</code>) via WebUI interface of CCU device</li>
-  <li>Configuration of FRITZ!Box/Repeater (see next section)</li>
-  <li>Configuration of Addon using the WebUI accessible <a href="settings/settings.cgi">config pages</a></li>
-</ol>
-
 <b>Configuration FRITZ! device</b>
 <ol>
   <li>Open the web configuration of the individual FRITZ!-device (e.g. <a href="http://fritz.box/">http://fritz.box/</a>)
@@ -101,6 +93,35 @@ This CCU-Addon allows to implement a general home presence detection system with
     <li>Modify login setting to <i>Login with FRITZ!Box-Username and Password</i>
   </ul>
 </ol>
+
+<b>Installation as CCU Addon</b>
+<ol>
+  <li>Download of recent Addon-Release from <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
+  <li>Installation of Addon archive (<code>hm_pdetect-X.X.tar.gz</code>) via WebUI interface of CCU device</li>
+  <li>Configuration of FRITZ!Box/Repeater (see next section)</li>
+  <li>Configuration of Addon using the WebUI accessible <a href="settings/settings.cgi">config pages</a></li>
+</ol>
+
+<b>Manual CUxD SystemExec Execution</b>
+<p>
+Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using a CUxD (<a href="http://www.cuxd.de">www.cuxd.de</a>) SystemExec call within HomeMatic scripts on the CCU following the following syntax:<br>
+
+<p>
+<code>
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh &lt;iterations&gt; &lt;waittime&gt; &");
+</code>
+</p>
+
+Please note the &lt;iterations&gt; and &lt;waittime&gt; which allows to additionally specify how many times hm_pdetect should be executed with a certain amount of wait time in between. One example of such an execution can be:<br><br>
+
+<p>
+<code>
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2 &");
+</code>
+</p>
+
+This will execute hm_pdetect for a total amount of 5 times with a waittime of 2 seconds between each execution.
+</p>
 
 <b>Support</b>
 <p>

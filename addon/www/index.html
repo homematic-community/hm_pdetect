@@ -70,7 +70,6 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
 </p>
 
 <b>Unterstützte CCU Platformen</b>
-
 <ul>
 <li>HomeMatic CCU1</li>
 <li><a href="http://www.eq-3.de/produkt-detail-zentralen-und-gateways/items/homematic-zentrale-ccu-2.html">HomeMatic CCU2</a></li>
@@ -78,22 +77,11 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
 </ul>
 
 <b>Unterstützte FRITZ! Modelle</b>
-
 <ul>
 <li>Alle Modelle von FRITZ!Box und FRITZ!Repeater ab FRITZ!OS 6</li>
 </ul>
 
-<b>Installation CCU-Addon</b>
-
-<ol>
-  <li>Download des aktuellen Addon-Releases von <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
-  <li>Installation des Addon-Paketes (<code>hm_pdetect-X.X.tar.gz</code>) mittels WebUI Oberfläche der CCU</li>
-  <li>Konfiguration der jeweiligen FRITZ!Box/Repeater (siehe nächster Punkt)</li>
-  <li>Konfiguration des Addons über WebUI zugängliche <a href="settings/settings.cgi">Konfigurationswebseite</a></li>
-</ol>
-
 <b>Konfiguration FRITZ!-Geräte</b>
-
 <ol>
   <li>Aufrufen der Webkonfiguration des jeweiligen FRITZ!-Gerätes (z.B. <a href="http://fritz.box/">http://fritz.box/</a>)
   <li>Anlegen eines neuen Nutzers unter <i>System->FRITZ!Box-Benutzer->Benutzer hinzufügen</i>
@@ -106,23 +94,47 @@ Dieses CCU-Addon erlaubt es eine Anwesenheitserkennung von Personen anhand des W
   </ul>
 </ol>
 
+<b>Installation als CCU-Addon</b>
+<ol>
+  <li>Download des aktuellen Addon-Releases von <a href="https://github.com/jens-maus/hm_pdetect/releases">Github</a></li>
+  <li>Installation des Addon-Paketes (<code>hm_pdetect-X.X.tar.gz</code>) mittels WebUI Oberfläche der CCU</li>
+  <li>Konfiguration der jeweiligen FRITZ!Box/Repeater (siehe nächster Punkt)</li>
+  <li>Konfiguration des Addons über WebUI zugängliche <a href="settings/settings.cgi">Konfigurationswebseite</a></li>
+</ol>
+
+<b>Manueller CUxD SystemExec Aufruf</b>
+<p>
+Zusätzlich zum automatischen, intervallbasierten Aufrufen von hm_pdetect ist es auch möglich mittels CUxD-basierter SystemExec Aufrufe (<a href="http://www.cuxd.de/">www.cuxd.de</a>) in der CCU-basierten Programmierumgebung eine Ausführung von hm_pdetect zu bestimmten Zeiten (z.B. bei Außentüröffnung) durchführen zu lassen. Hierzu kann man in HomeMatic-Programmen die folgende beispielhafte Anweisung hinzufügen:<br>
+
+<p>
+<code>
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh &lt;iterations&gt; &lt;waittime&gt; &");
+</code>
+</p>
+
+Hierbei gilt zu beachten, dass bei &lt;iterations&gt; und &lt;waittime&gt; jeweils die Anzahl der Iterationen und eine gewünschte Wartezeit zwischen den Iterationen hinzugefügt werden kann. Ein Beispiel eines solchen Aufrufen kann sein:<br><br>
+
+<p>
+<code>
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2 &");
+</code>
+</p>
+
+Dies wird bei Ausführung dieser Anweisung dann hm_pdetect 5-mal hintereinander aufrufen mit jeweils 2 Sekunden Pause zwischen den Aufrufen.
+</p>
 
 <b>Support</b>
-
 <p>
 Bei Problemen/Bugs oder Ideen zur Weiterentwicklung bitte unter dem Github-Projekt ein Ticket <a href="https://github.com/jens-maus/hm_pdetect/issues">erstellen</a>. Für Hilfe bei der Benutzung/Konfiguration des Addons kann man unter folgendem deutschsprachigen Forumbeitrag hilfe suchen: <a href="http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907">hm_pdetect</a>.
 </p>
 
 <b>Lizenz</b>
-
 <p>Die Nutzung und Entwicklung des Addons unterliegt der Version 3 der LGPL Open Source Lizenz.</p>
 
 <b>Authoren</b>
-
 <p>Copyright (c) 2015-2016 Jens Maus &lt;mail@jens-maus.de&gt;</p>
 
 <b>Hinweis</b>
-
 <p>
 Dieses Addon nutzt KnowHow das im Zuge folgender anderer Entwicklungen erarbeitet wurde:
 <ul>

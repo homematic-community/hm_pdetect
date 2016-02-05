@@ -71,11 +71,11 @@ This CCU-Addon allows to implement a general home presence detection system with
 ## CUxD SystemExec use
 Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using a CUxD (www.cuxd.de) SystemExec call within HomeMatic scripts on the CCU following the following syntax:
 
-        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime>");
+        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime> &");
  
 Please note the &lt;iterations&gt; and &lt;waittime&gt; which allows to additionally specify how many times hm_pdetect should be executed with a certain amount of wait time in between. One example of such an execution can be:
 
-        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2");
+        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2 &");
 
 This will execute hm_pdetect for a total amount of 5 times with a waittime of 2 seconds between each execution.
 
