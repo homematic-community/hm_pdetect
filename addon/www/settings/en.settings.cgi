@@ -18,7 +18,7 @@ if { $args(command) == "defaults" } {
   set args(HM_USER_LIST) ""
   set args(HM_KNOWN_LIST_MODE) ""
   set args(HM_KNOWN_LIST) ""
-  set args(HM_INTERVAL_TIME) ""
+  set args(HM_INTERVAL_TIME) "15"
   
   # force save of data
   set args(command) "save"
@@ -42,7 +42,7 @@ set HM_CCU_PRESENCE_AWAY ""
 set HM_USER_LIST ""
 set HM_KNOWN_LIST_MODE ""
 set HM_KNOWN_LIST ""
-set HM_INTERVAL_TIME ""
+set HM_INTERVAL_TIME "15"
 
 loadConfigFile
 set content [loadFile en.settings.html]
