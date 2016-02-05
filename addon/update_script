@@ -49,8 +49,13 @@ ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/hm_pdetect-addon.cfg
 
 # make sure to remove any hm_pdetect cronjobs
 # since this is not required since 0.8+ anymore
-if [ -x /usr/bin/crontab ]; then
-  (crontab -l) 2>&1 | grep -v "no crontab" | grep -v "${ADDON_DIR}/run.sh" | sort | uniq | crontab -
+if [ -s /usr/local/crontabs/root ]; then
+  cat /usr/local/crontabs/root | grep -v "${ADDON_DIR}/run.sh" | sort | uniq >/tmp/crontab.$$
+  # we make sure we don't overwrite with an empty file
+  # because on the CCU2+RaspberryMatic it should never be empty!
+  if [ -s /tmp/crontab.$$ ]; then
+    mv /tmp/crontab.$$ /usr/local/crontabs/root
+  fi
 fi
 
 sync
