@@ -23,8 +23,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="0.8"
-VERSION_DATE="Feb 05 2016"
+VERSION="0.9"
+VERSION_DATE="Feb 16 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -55,7 +55,7 @@ HM_CCU_PRESENCE_VAR=${HM_CCU_PRESENCE_VAR:-"Anwesenheit"}
 # Specify mode of HM_KNOWN_LIST variable setting
 #
 # guest - apply known ignore list to devices in a dedicated
-#         guest WiFi only (requireѕ enabled guest WiFi in 
+#         guest WiFi/LAN only (requireѕ enabled guest WiFi/LAN in
 #         FRITZ! device)
 # all   - apply known ignore list to all devices
 # off   - disabled guest recognition
@@ -125,8 +125,8 @@ fi
 
 # declare all associative arrays first (bash v4+ required)
 declare -A HM_USER_LIST     # username<>MAC/IP tuple
-declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi)
-declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi)
+declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi/LAN)
+declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi/LAN)
 declare -A sidStorage       # IP<>SID tuple
 
 ###############################
@@ -514,12 +514,12 @@ function retrieveFritzBoxDeviceList()
     fi
   done <<< "${devices}"
 
-  # modify the global associative array for the normal-WiFi
+  # modify the global associative array for the normal-WiFi/LAN
   for (( i = 0; i < ${#maclist_normal[@]} ; i++ )); do
     normalDeviceList[${maclist_normal[$i]}]=${iplist_normal[$i]}
   done
 
-  # modify the global associative array for the guest-WiFi
+  # modify the global associative array for the guest-WiFi/LAN
   for (( i = 0; i < ${#maclist_guest[@]} ; i++ )); do
     guestDeviceList[${maclist_guest[$i]}]=${iplist_guest[$i]}
   done
@@ -630,8 +630,8 @@ function run_pdetect()
 
   # output some statistics
   echo
-  echo " Normal-WiFi devices active: ${#normalDeviceList[@]}"
-  echo " Guest-WiFi devices active: ${#guestDeviceList[@]}"
+  echo " Normal-WiFi/LAN devices active: ${#normalDeviceList[@]}"
+  echo " Guest-WiFi/LAN devices active: ${#guestDeviceList[@]}"
   
   # lets identify user presence
   presenceList=""
@@ -643,7 +643,7 @@ function run_pdetect()
     # prepare the device list of the user as a regex
     userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
   
-    # match MAC address and IP address in normal and guest WiFi
+    # match MAC address and IP address in normal and guest WiFi/LAN
     if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} || \
           ${guestDeviceList[@]}   =~ ${userDeviceList^^} || \
           ${!normalDeviceList[@]} =~ ${userDeviceList^^} || \
@@ -706,7 +706,7 @@ function run_pdetect()
   fi
   
   # lets identify guests by checking the normal and guest
-  # wifi device list and comparing them to the HM_KNOWN_LIST
+  # WiFi/LAN device list and comparing them to the HM_KNOWN_LIST
   HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
   for device in ${HM_KNOWN_LIST[@]}; do
   

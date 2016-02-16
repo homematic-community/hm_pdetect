@@ -45,7 +45,7 @@ HM_USER_LIST=([John]=C9:85:51:8B:06:10 [Jane]='06:F7:E4:42:F4:4D 00:27:00:4D:1E:
 # Specify mode of HM_KNOWN_LIST variable setting
 #
 # guest - apply known ignore list to devices in a dedicated
-#         guest WiFi only (requireѕ enabled guest WiFi in 
+#         guest WiFi/LAN only (requireѕ enabled guest WiFi/LAN in
 #         FRITZ! device)
 # all   - apply known ignore list to all devices
 # off   - disabled guest recognition
