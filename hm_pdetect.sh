@@ -24,7 +24,7 @@
 #
 
 VERSION="0.9"
-VERSION_DATE="Feb 16 2016"
+VERSION_DATE="Mar 12 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -538,33 +538,37 @@ function createUserTupleList()
   # string so that we end up with something like '{1,}{2,}{3,}', etc.
   local b=""
   local i=0
-  for Y in $a; do
+  IFS=';'
+  for Y in ${a}; do
     ((i = i + 1))
     b=$b{$i,}
   done
+  IFS=' '
 
   # lets apply the brace expansion string and sort it
   # according to numbers and not have it in the standard sorting
-  local c=$(for X in $(eval echo\ $b); do echo $X; done | sort -n)
+  local c=$(for X in $(eval echo\ $b); do echo $X; done | sort -n | tr '\n' ' ')
 
   # lets construct tupels for every number (1-9) in
   # the brace expansion
   local tuples=""
-  for X in $c; do
+  for X in ${c}; do
     if [[ -n ${tuples} ]]; then
       tuples="${tuples};"
     fi
-    folded=$(echo ${X} | fold -w1)
-    tuples="${tuples}$(echo ${folded} | tr ' ' ',')"
+    folded=$(echo -n ${X} | fold -w1 | tr '\n' ',')
+    tuples="${tuples}${folded}"
   done
 
   # now we replace each number (1-9) with the appropriate
   # string of the input array
   local i=0
+  IFS=';'
   for Z in ${a}; do
     ((i = i + 1))
     tuples=${tuples//${i}/${Z}}
   done
+  IFS=' '
 
   # now add "Guest" to each tuple (if not disabled)
   local guestTuples=""
@@ -616,7 +620,7 @@ function run_pdetect()
   i=0
   for ip in ${HM_FRITZ_IP[@]}; do
     echo -n " ${ip}"
-    retrieveFritzBoxDeviceList ${ip} ${HM_FRITZ_USER} ${HM_FRITZ_SECRET}
+    retrieveFritzBoxDeviceList ${ip} "${HM_FRITZ_USER}" "${HM_FRITZ_SECRET}"
     if [[ $? -eq 0 ]]; then
       ((i = i + 1))
     fi
@@ -642,7 +646,7 @@ function run_pdetect()
   
     # prepare the device list of the user as a regex
     userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
-  
+
     # match MAC address and IP address in normal and guest WiFi/LAN
     if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} || \
           ${guestDeviceList[@]}   =~ ${userDeviceList^^} || \
@@ -656,7 +660,7 @@ function run_pdetect()
       if [[ -n ${presenceList} ]]; then
         presenceList+=","
       fi
-      presenceList+=${user}
+      presenceList+="${user}"
     else
       echo away
     fi
@@ -690,18 +694,18 @@ function run_pdetect()
     done
   
     # set status in homematic CCU
-    createVariable ${HM_CCU_PRESENCE_VAR}.${user} bool "${user} @ home"
-    setVariableState ${HM_CCU_PRESENCE_VAR}.${user} ${stat}
+    createVariable "${HM_CCU_PRESENCE_VAR}.${user}" bool "${user} @ home"
+    setVariableState "${HM_CCU_PRESENCE_VAR}.${user}" ${stat}
   done
   
   # now we set a separate users presence variable to true/false in case
   # any defined user is present
   if [[ -n ${HM_CCU_PRESENCE_USER} ]]; then
-    createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER} bool "any user @ home"
+    createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}" bool "any user @ home"
     if [[ -n ${presenceList} ]]; then
-      setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER} true
+      setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}" true
     else
-      setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER} false
+      setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}" false
     fi
   fi
   
@@ -757,16 +761,16 @@ function run_pdetect()
     if [[ ${#guestList[@]} -gt 0 ]]; then
       # set status in homematic CCU
       echo "present - ${#guestList[@]} (${guestList[@]})"
-      createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-      setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} true
+      createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" bool "${HM_CCU_PRESENCE_GUEST} @ home"
+      setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" true
       if [[ -n ${presenceList} ]]; then
         presenceList+=","
       fi
       presenceList+="${HM_CCU_PRESENCE_GUEST}"
     else
       echo "away"
-      createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} bool "${HM_CCU_PRESENCE_GUEST} @ home"
-      setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST} false
+      createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" bool "${HM_CCU_PRESENCE_GUEST} @ home"
+      setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" false
     fi
   else
     echo "disabled"
@@ -775,10 +779,17 @@ function run_pdetect()
   # we create and set another global presence variable as an
   # enum of all possible presence combinations
   if [[ -n ${HM_CCU_PRESENCE_LIST} ]]; then
-    userList="${!HM_USER_LIST[@]}"
+    userList=""
+    for user in "${!HM_USER_LIST[@]}"; do
+      if [[ -n ${userList} ]]; then
+        userList="${userList};${user}"
+      else
+        userList="${user}"
+      fi
+    done
     userTupleList=$(createUserTupleList "${userList}")
-    createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST} enum "presence enum list @ home" ${userTupleList}
-    setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST} $(whichEnumID ${userTupleList} ${presenceList})
+    createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}" enum "presence enum list @ home" "${userTupleList}"
+    setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}" $(whichEnumID "${userTupleList}" "${presenceList}")
   fi
   
   # we create and set a global presence variable as a string
@@ -789,17 +800,17 @@ function run_pdetect()
     else
       userList="${presenceList}"
     fi
-    createVariable ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_STR} string "presence list @ home"
-    setVariableState ${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_STR} \'${userList}\'
+    createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_STR}" string "presence list @ home"
+    setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_STR}" "'${userList}'"
   fi
   
   # set the global presence variable to true/false depending
   # on the general presence of people in the house
-  createVariable ${HM_CCU_PRESENCE_VAR} bool "global presence @ home"
+  createVariable "${HM_CCU_PRESENCE_VAR}" bool "global presence @ home"
   if [[ -z ${presenceList} ]]; then
-    setVariableState ${HM_CCU_PRESENCE_VAR} false
+    setVariableState "${HM_CCU_PRESENCE_VAR}" false
   else
-    setVariableState ${HM_CCU_PRESENCE_VAR} true
+    setVariableState "${HM_CCU_PRESENCE_VAR}" true
   fi
   
   echo "== $(date) ==================================="
