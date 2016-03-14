@@ -41,7 +41,9 @@ cp -af rc.d/* ${RCD_DIR}
 
 # copy www stuff
 cp -af www ${ADDON_DIR}/
-ln -sf ${ADDON_DIR}/www ${WWW_DIR}
+if [ ! -e ${WWW_DIR} ]; then
+  ln -sf ${ADDON_DIR}/www ${WWW_DIR}
+fi
 
 # add menu entry
 touch /usr/local/etc/config/hm_addons.cfg
