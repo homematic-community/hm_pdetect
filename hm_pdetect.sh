@@ -40,17 +40,23 @@ HM_FRITZ_IP=${HM_FRITZ_IP:-"fritz.box fritz.repeater"}
 # IP address/hostname of CCU2
 HM_CCU_IP=${HM_CCU_IP:-"homematic-ccu2.fritz.box"}
 
+# Name of the CCU variable prefix used
+HM_CCU_PRESENCE_VAR=${HM_CCU_PRESENCE_VAR:-"Anwesenheit"}
+
 # used names (user definable)
 HM_CCU_PRESENCE_USER=${HM_CCU_PRESENCE_USER:-"Nutzer"}
+HM_CCU_PRESENCE_USER_ENABLED=${HM_CCU_PRESENCE_USER_ENABLED:-true}
 HM_CCU_PRESENCE_GUEST=${HM_CCU_PRESENCE_GUEST:-"Gast"}
+HM_CCU_PRESENCE_GUEST_ENABLED=${HM_CCU_PRESENCE_GUEST_ENABLED:-true}
+HM_CCU_PRESENCE_LIST=${HM_CCU_PRESENCE_LIST:-"list"}
+HM_CCU_PRESENCE_LIST_ENABLED=${HM_CCU_PRESENCE_LIST_ENABLED:-true}
+HM_CCU_PRESENCE_STR=${HM_CCU_PRESENCE_STR:-"string"}
+HM_CCU_PRESENCE_STR_ENABLED=${HM_CCU_PRESENCE_STR_ENABLED:-true}
+
+# used names for variable values
 HM_CCU_PRESENCE_NOBODY=${HM_CCU_PRESENCE_NOBODY:-"Niemand"}
 HM_CCU_PRESENCE_PRESENT=${HM_CCU_PRESENCE_PRESENT:-"anwesend"}
 HM_CCU_PRESENCE_AWAY=${HM_CCU_PRESENCE_AWAY:-"abwesend"}
-HM_CCU_PRESENCE_LIST=${HM_CCU_PRESENCE_LIST:-"list"}
-HM_CCU_PRESENCE_STR=${HM_CCU_PRESENCE_STR:-"string"}
-
-# Name of the CCU variable prefix used
-HM_CCU_PRESENCE_VAR=${HM_CCU_PRESENCE_VAR:-"Anwesenheit"}
 
 # Specify mode of HM_KNOWN_LIST variable setting
 #
@@ -572,7 +578,9 @@ function createUserTupleList()
 
   # now add "Guest" to each tuple (if not disabled)
   local guestTuples=""
-  if [[ -n ${HM_CCU_PRESENCE_GUEST} && ${HM_KNOWN_LIST_MODE} != "off" ]]; then
+  if [[ -n ${HM_CCU_PRESENCE_GUEST} && \
+        ${HM_KNOWN_LIST_MODE} != "off" && \
+        ${HM_CCU_PRESENCE_GUEST_ENABLED} == true ]]; then
     IFS=';'
     guestTuples=";${HM_CCU_PRESENCE_GUEST}"
     for U in ${tuples}; do
@@ -700,7 +708,7 @@ function run_pdetect()
   
   # now we set a separate users presence variable to true/false in case
   # any defined user is present
-  if [[ -n ${HM_CCU_PRESENCE_USER} ]]; then
+  if [[ -n ${HM_CCU_PRESENCE_USER} && ${HM_CCU_PRESENCE_USER_ENABLED} == true ]]; then
     createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}" bool "any user @ home"
     if [[ -n ${presenceList} ]]; then
       setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_USER}" true
@@ -778,7 +786,7 @@ function run_pdetect()
   
   # we create and set another global presence variable as an
   # enum of all possible presence combinations
-  if [[ -n ${HM_CCU_PRESENCE_LIST} ]]; then
+  if [[ -n ${HM_CCU_PRESENCE_LIST} && ${HM_CCU_PRESENCE_LIST_ENABLED} == true ]]; then
     userList=""
     for user in "${!HM_USER_LIST[@]}"; do
       if [[ -n ${userList} ]]; then
@@ -794,7 +802,7 @@ function run_pdetect()
   
   # we create and set a global presence variable as a string
   # variable which users can query.
-  if [[ -n ${HM_CCU_PRESENCE_STR} ]]; then
+  if [[ -n ${HM_CCU_PRESENCE_STR} && ${HM_CCU_PRESENCE_STR_ENABLED} == true ]]; then
     if [[ -z ${presenceList} ]]; then
       userList="${HM_CCU_PRESENCE_NOBODY}"
     else

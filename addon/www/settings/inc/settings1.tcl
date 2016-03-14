@@ -31,5 +31,33 @@ regsub -all {<%HM_KNOWN_LIST_MODE1%>} $content [string trim $HM_KNOWN_LIST_MODE1
 regsub -all {<%HM_KNOWN_LIST_MODE2%>} $content [string trim $HM_KNOWN_LIST_MODE2] content
 regsub -all {<%HM_KNOWN_LIST_MODE3%>} $content [string trim $HM_KNOWN_LIST_MODE3] content
 
+if {[string equal "false" $HM_CCU_PRESENCE_LIST_ENABLED]} {
+  set HM_CCU_PRESENCE_LIST_ENABLED ""
+} else {
+  set HM_CCU_PRESENCE_LIST_ENABLED "checked"
+}
+regsub -all {<%HM_CCU_PRESENCE_LIST_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_LIST_ENABLED] content
+
+if {[string equal "false" $HM_CCU_PRESENCE_STR_ENABLED]} {
+  set HM_CCU_PRESENCE_STR_ENABLED ""
+} else {
+  set HM_CCU_PRESENCE_STR_ENABLED "checked"
+}
+regsub -all {<%HM_CCU_PRESENCE_STR_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_STR_ENABLED] content
+
+if {[string equal "false" $HM_CCU_PRESENCE_GUEST_ENABLED]} {
+  set HM_CCU_PRESENCE_GUEST_ENABLED ""
+} else {
+  set HM_CCU_PRESENCE_GUEST_ENABLED "checked"
+}
+regsub -all {<%HM_CCU_PRESENCE_GUEST_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_GUEST_ENABLED] content
+
+if {[string equal "false" $HM_CCU_PRESENCE_USER_ENABLED]} {
+  set HM_CCU_PRESENCE_USER_ENABLED ""
+} else {
+  set HM_CCU_PRESENCE_USER_ENABLED "checked"
+}
+regsub -all {<%HM_CCU_PRESENCE_USER_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_USER_ENABLED] content
+
 puts "Content-Type: text/html; charset=utf-8\n\n"
 puts $content

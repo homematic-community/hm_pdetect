@@ -1,7 +1,7 @@
 set ADDONNAME "hm_pdetect"
 set FILENAME "/usr/local/addons/hm_pdetect/etc/hm_pdetect.conf"
 
-array set args { command INV HM_FRITZ_IP {} HM_FRITZ_USER {} HM_FRITZ_SECRET {} HM_CCU_PRESENCE_VAR {} HM_CCU_PRESENCE_LIST {} HM_CCU_PRESENCE_STR {} HM_CCU_PRESENCE_GUEST {} HM_CCU_PRESENCE_NOBODY {} HM_CCU_PRESENCE_USER {} HM_CCU_PRESENCE_PRESENT {} HM_CCU_PRESENCE_AWAY {} HM_USER_LIST {} HM_KNOWN_LIST_MODE {} HM_KNOWN_LIST {} HM_INTERVAL_TIME {} }
+array set args { command INV HM_FRITZ_IP {} HM_FRITZ_USER {} HM_FRITZ_SECRET {} HM_CCU_PRESENCE_VAR {} HM_CCU_PRESENCE_LIST {} HM_CCU_PRESENCE_LIST_ENABLED {} HM_CCU_PRESENCE_STR {} HM_CCU_PRESENCE_STR_ENABLED {} HM_CCU_PRESENCE_GUEST {} HM_CCU_PRESENCE_GUEST_ENABLED {} HM_CCU_PRESENCE_NOBODY {} HM_CCU_PRESENCE_USER {} HM_CCU_PRESENCE_USER_ENABLED {} HM_CCU_PRESENCE_PRESENT {} HM_CCU_PRESENCE_AWAY {} HM_USER_LIST {} HM_KNOWN_LIST_MODE {} HM_KNOWN_LIST {} HM_INTERVAL_TIME {} }
 
 proc utf8 {hex} {
     set hex [string map {% {}} $hex]
@@ -72,7 +72,7 @@ proc loadFile { fileName } {
 }
 
 proc loadConfigFile { } {
-    global FILENAME HM_FRITZ_IP HM_FRITZ_USER HM_FRITZ_SECRET HM_CCU_PRESENCE_VAR HM_CCU_PRESENCE_LIST HM_CCU_PRESENCE_STR HM_CCU_PRESENCE_GUEST HM_CCU_PRESENCE_NOBODY HM_CCU_PRESENCE_USER HM_CCU_PRESENCE_PRESENT HM_CCU_PRESENCE_AWAY HM_USER_LIST HM_KNOWN_LIST_MODE HM_KNOWN_LIST HM_INTERVAL_TIME
+    global FILENAME HM_FRITZ_IP HM_FRITZ_USER HM_FRITZ_SECRET HM_CCU_PRESENCE_VAR HM_CCU_PRESENCE_LIST HM_CCU_PRESENCE_LIST_ENABLED HM_CCU_PRESENCE_STR HM_CCU_PRESENCE_STR_ENABLED HM_CCU_PRESENCE_GUEST HM_CCU_PRESENCE_GUEST_ENABLED HM_CCU_PRESENCE_NOBODY HM_CCU_PRESENCE_USER HM_CCU_PRESENCE_USER_ENABLED HM_CCU_PRESENCE_PRESENT HM_CCU_PRESENCE_AWAY HM_USER_LIST HM_KNOWN_LIST_MODE HM_KNOWN_LIST HM_INTERVAL_TIME
     set conf ""
     catch {set conf [loadFile $FILENAME]}
 
@@ -84,10 +84,14 @@ proc loadConfigFile { } {
         regexp -line {^HM_FRITZ_SECRET=\"(.*)\"$} $conf dummy HM_FRITZ_SECRET
         regexp -line {^HM_CCU_PRESENCE_VAR=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_VAR
         regexp -line {^HM_CCU_PRESENCE_LIST=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_LIST
+        regexp -line {^HM_CCU_PRESENCE_LIST_ENABLED=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_LIST_ENABLED
         regexp -line {^HM_CCU_PRESENCE_STR=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_STR
+        regexp -line {^HM_CCU_PRESENCE_STR_ENABLED=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_STR_ENABLED
         regexp -line {^HM_CCU_PRESENCE_GUEST=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_GUEST
+        regexp -line {^HM_CCU_PRESENCE_GUEST_ENABLED=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_GUEST_ENABLED
         regexp -line {^HM_CCU_PRESENCE_NOBODY=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_NOBODY
         regexp -line {^HM_CCU_PRESENCE_USER=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_USER
+        regexp -line {^HM_CCU_PRESENCE_USER_ENABLED=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_USER_ENABLED
         regexp -line {^HM_CCU_PRESENCE_PRESENT=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_PRESENT
         regexp -line {^HM_CCU_PRESENCE_AWAY=\"(.*)\"$} $conf dummy HM_CCU_PRESENCE_AWAY
         regexp -line {^HM_USER_LIST=\((.*)\)$} $conf dummy HM_USER_LIST
@@ -124,10 +128,14 @@ proc saveConfigFile { } {
     set HM_FRITZ_SECRET [url-decode $args(HM_FRITZ_SECRET)]
     set HM_CCU_PRESENCE_VAR [url-decode $args(HM_CCU_PRESENCE_VAR)]
     set HM_CCU_PRESENCE_LIST [url-decode $args(HM_CCU_PRESENCE_LIST)]
+    set HM_CCU_PRESENCE_LIST_ENABLED [url-decode $args(HM_CCU_PRESENCE_LIST_ENABLED)]
     set HM_CCU_PRESENCE_STR [url-decode $args(HM_CCU_PRESENCE_STR)]
+    set HM_CCU_PRESENCE_STR_ENABLED [url-decode $args(HM_CCU_PRESENCE_STR_ENABLED)]
     set HM_CCU_PRESENCE_GUEST [url-decode $args(HM_CCU_PRESENCE_GUEST)]
+    set HM_CCU_PRESENCE_GUEST_ENABLED [url-decode $args(HM_CCU_PRESENCE_GUEST_ENABLED)]
     set HM_CCU_PRESENCE_NOBODY [url-decode $args(HM_CCU_PRESENCE_NOBODY)]
     set HM_CCU_PRESENCE_USER [url-decode $args(HM_CCU_PRESENCE_USER)]
+    set HM_CCU_PRESENCE_USER_ENABLED [url-decode $args(HM_CCU_PRESENCE_USER_ENABLED)]
     set HM_CCU_PRESENCE_PRESENT [url-decode $args(HM_CCU_PRESENCE_PRESENT)]
     set HM_CCU_PRESENCE_AWAY [url-decode $args(HM_CCU_PRESENCE_AWAY)]
     set HM_USER_LIST [url-decode $args(HM_USER_LIST)]
@@ -163,6 +171,22 @@ proc saveConfigFile { } {
     if { [string length $HM_CCU_PRESENCE_PRESENT] > 0 }  { puts $fd "HM_CCU_PRESENCE_PRESENT=\"$HM_CCU_PRESENCE_PRESENT\"" }
     if { [string length $HM_CCU_PRESENCE_AWAY] > 0 }     { puts $fd "HM_CCU_PRESENCE_AWAY=\"$HM_CCU_PRESENCE_AWAY\"" }
     if { [string length $HM_KNOWN_LIST_MODE] > 0 }       { puts $fd "HM_KNOWN_LIST_MODE=\"$HM_KNOWN_LIST_MODE\"" }
+
+    if { $HM_CCU_PRESENCE_LIST_ENABLED != "on" } {
+      puts $fd "HM_CCU_PRESENCE_LIST_ENABLED=\"false\""
+    }
+
+    if { $HM_CCU_PRESENCE_STR_ENABLED != "on" } {
+      puts $fd "HM_CCU_PRESENCE_STR_ENABLED=\"false\""
+    }
+
+    if { $HM_CCU_PRESENCE_GUEST_ENABLED != "on" } {
+      puts $fd "HM_CCU_PRESENCE_GUEST_ENABLED=\"false\""
+    }
+
+    if { $HM_CCU_PRESENCE_USER_ENABLED != "on" } {
+      puts $fd "HM_CCU_PRESENCE_USER_ENABLED=\"false\""
+    }
 
     if { $HM_INTERVAL_TIME == 0 } { 
       puts $fd "HM_INTERVAL_MAX=\"1\""

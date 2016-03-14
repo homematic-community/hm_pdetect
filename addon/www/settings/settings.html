@@ -97,7 +97,7 @@
 </div>
 <!-- Separator-->
 <div class="form-group">
-  <label class="col-md-3 control-label"><u>CCU-Experteneinstellungen</u></label>
+  <label class="col-md-3 control-label"><u>CCU-Variableneinstellungen</u></label>
 </div>
 <!-- Text input-->
 <div class="form-group">
@@ -130,22 +130,42 @@
 <div class="form-group">
   <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_USER" id="HM_CCU_PRESENCE_USER-Label">Variablenpostfixe:</label>
   <div class="col-md-4">
-    <input id="HM_CCU_PRESENCE_USER" name="HM_CCU_PRESENCE_USER" type="text" placeholder="z.B. 'Nutzer'" class="form-control input-md" value="<%HM_CCU_PRESENCE_USER%>">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <input id="HM_CCU_PRESENCE_USER_ENABLED" name="HM_CCU_PRESENCE_USER_ENABLED" type="checkbox" <%HM_CCU_PRESENCE_USER_ENABLED%>>
+      </span>
+      <input id="HM_CCU_PRESENCE_USER" name="HM_CCU_PRESENCE_USER" type="text" placeholder="z.B. 'Nutzer'" class="form-control input-md" value="<%HM_CCU_PRESENCE_USER%>">
+    </div>
     <span class="help-block">Standardwert: 'Nutzer' (Anwesenheit.Nutzer)</span>
   </div>
   <div class="col-md-3">
-    <input id="HM_CCU_PRESENCE_GUEST" name="HM_CCU_PRESENCE_GUEST" type="text" placeholder="z.B. 'Gast'" class="form-control input-md" value="<%HM_CCU_PRESENCE_GUEST%>">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <input id="HM_CCU_PRESENCE_GUEST_ENABLED" name="HM_CCU_PRESENCE_GUEST_ENABLED" type="checkbox" <%HM_CCU_PRESENCE_GUEST_ENABLED%>>
+      </span>
+      <input id="HM_CCU_PRESENCE_GUEST" name="HM_CCU_PRESENCE_GUEST" type="text" placeholder="z.B. 'Gast'" class="form-control input-md" value="<%HM_CCU_PRESENCE_GUEST%>">
+    </div>
     <span class="help-block">Standardwert: 'Gast' (Anwesenheit.Gast)</span>  
   </div>
 </div>
 <div class="form-group">
   <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_LIST" id="HM_CCU_PRESENCE_LIST-Label"></label>
   <div class="col-md-4">
-    <input id="HM_CCU_PRESENCE_LIST" name="HM_CCU_PRESENCE_LIST" type="text" placeholder="z.B. 'list'" class="form-control input-md" value="<%HM_CCU_PRESENCE_LIST%>">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <input id="HM_CCU_PRESENCE_LIST_ENABLED" name="HM_CCU_PRESENCE_LIST_ENABLED" type="checkbox" <%HM_CCU_PRESENCE_LIST_ENABLED%>>
+      </span>
+      <input id="HM_CCU_PRESENCE_LIST" name="HM_CCU_PRESENCE_LIST" type="text" placeholder="z.B. 'list'" class="form-control input-md" value="<%HM_CCU_PRESENCE_LIST%>">
+    </div>
     <span class="help-block">Standardwert: 'list' (Anwesenheit.list)</span>
   </div>
   <div class="col-md-3">
-    <input id="HM_CCU_PRESENCE_STR" name="HM_CCU_PRESENCE_STR" type="text" placeholder="z.B. 'string'" class="form-control input-md" value="<%HM_CCU_PRESENCE_STR%>">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <input id="HM_CCU_PRESENCE_STR_ENABLED" name="HM_CCU_PRESENCE_STR_ENABLED" type="checkbox" <%HM_CCU_PRESENCE_STR_ENABLED%>>
+      </span>
+      <input id="HM_CCU_PRESENCE_STR" name="HM_CCU_PRESENCE_STR" type="text" placeholder="z.B. 'string'" class="form-control input-md" value="<%HM_CCU_PRESENCE_STR%>">
+    </div>
     <span class="help-block">Standardwert: 'string' (Anwesenheit.string)</span>
   </div>
 </div>
@@ -202,10 +222,14 @@ function check () {
   $('#HM_KNOWN_LIST_MODE3').prop("checked", false);
   $('#HM_CCU_PRESENCE_VAR').val("");
   $('#HM_CCU_PRESENCE_LIST').val("");
+  $('#HM_CCU_PRESENCE_LIST_ENABLED').prop("checked", true);
   $('#HM_CCU_PRESENCE_STR').val("");
+  $('#HM_CCU_PRESENCE_STR_ENABLED').prop("checked", true);
   $('#HM_CCU_PRESENCE_GUEST').val("");
+  $('#HM_CCU_PRESENCE_GUEST_ENABLED').prop("checked", true);
   $('#HM_CCU_PRESENCE_NOBODY').val("");
   $('#HM_CCU_PRESENCE_USER').val("");
+  $('#HM_CCU_PRESENCE_USER_ENABLED').prop("checked", true);
   $('#HM_CCU_PRESENCE_PRESENT').val("");
   $('#HM_CCU_PRESENCE_AWAY').val("");
 }
