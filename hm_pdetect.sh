@@ -24,7 +24,7 @@
 #
 
 VERSION="0.9"
-VERSION_DATE="Mar 12 2016"
+VERSION_DATE="Mar 15 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
