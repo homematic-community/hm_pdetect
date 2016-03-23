@@ -16,8 +16,8 @@ proc url-decode str {
     # Replace UTF-8 sequences with calls to the utf8 decode proc...
     regsub -all {(%[0-9A-Fa-f0-9]{2})+} $str {[utf8 \0]} str
 
-    # process \u unicode mapped chars
-    return [subst -novar  $str]
+    # process \u unicode mapped chars and trim whitespaces
+    return [string trim [subst -novar  $str]]
 }
 
 proc str-escape str {
@@ -143,9 +143,25 @@ proc saveConfigFile { } {
     set HM_KNOWN_LIST [url-decode $args(HM_KNOWN_LIST)]
     set HM_INTERVAL_TIME [url-decode $args(HM_INTERVAL_TIME)]
 
-    # make sure to replace newline stuff and double whitespaces with single whitespaces
-    # because in the config we don't allow newlines.
+    # make sure to that HM_USER_LIST contains a valid associate array
+    # expression or otherwise we might run into problems later on.
+
+    # replace double-whitespaces to single ones
     regsub -all {\s+} $HM_USER_LIST " " HM_USER_LIST
+
+    # replace "= " to "="
+    regsub -all {=\s+} $HM_USER_LIST "=" HM_USER_LIST
+
+    # replace " =" to "="
+    regsub -all {\s+=} $HM_USER_LIST "=" HM_USER_LIST
+
+    # replace " ]" to "]"
+    regsub -all {\s+\]} $HM_USER_LIST "\]" HM_USER_LIST
+
+    # replace "[ " to "["
+    regsub -all {\[\s+} $HM_USER_LIST "\[" HM_USER_LIST
+
+    # make sure HM_KNOWN_LIST doesn't contain double whitespaces
     regsub -all {\s+} $HM_KNOWN_LIST " " HM_KNOWN_LIST
 
     # make sure to escape variable content that may contain special
