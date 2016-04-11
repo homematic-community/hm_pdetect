@@ -24,7 +24,7 @@
 #
 
 VERSION="0.9"
-VERSION_DATE="Mar 15 2016"
+VERSION_DATE="Apr 11 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -408,10 +408,14 @@ function getDeviceList()
   local sid=$2
   local devices=
 
+  # NOTE: FRITZ!OS Version can be queried via following URL
+  #
+  # http://fritz.box/query.lua?sid=${sid}&fw=logic:status/nspver
+
   # retrieve the network device list from the fritzbox using a
   # specific call to query.lua so that we get our information without
   # having to parse HTML portions.
-  devices=$(wget -q -O - --max-redirect=0 --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,active)")
+  devices=$(wget -q -O - --max-redirect=0 --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,wlan,speed,active)")
   if [[ $? -ne 0 || -z ${devices} ]]; then
     return ${RETURN_FAILURE}
   fi
@@ -465,6 +469,9 @@ function retrieveFritzBoxDeviceList()
     return ${RETURN_FAILURE}
   fi
 
+  # uncomment for debugging purposes
+  #echo ${devices}
+
   # the SID succeeded so lets make this SID the
   # new currently valid SID of this ip
   sidStorage[${ip}]=${sid}
@@ -474,6 +481,8 @@ function retrieveFritzBoxDeviceList()
   local re_ip="\"ip\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_mac="\"mac\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_guest="\"guest\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_wlan="\"wlan\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  local re_speed="\"speed\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_active="\"active\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
 
   local maclist_normal=()
@@ -484,10 +493,13 @@ function retrieveFritzBoxDeviceList()
   local ipaddr=""
   local mac=""
   local guest=0
+  local wlan=0
+  local speed=0
   local active=0
 
   # parse the query.lua output
   while read -r line; do
+
     # extract name
     if [[ $line =~ $re_name ]]; then
       name="${BASH_REMATCH[1]}"
@@ -497,25 +509,39 @@ function retrieveFritzBoxDeviceList()
       mac="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_guest ]]; then
       guest="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_wlan ]]; then
+      wlan="${BASH_REMATCH[1]}"
+    elif [[ $line =~ $re_speed ]]; then
+      speed="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_active ]]; then
       active="${BASH_REMATCH[1]}"
 
-      # only add 'active' devices
-      if [[ ${active} -eq 1 ]]; then
+      # DEBUG: output name+speed+active for debugging purposes
+      #echo -n "${name}: ${active} @ ${speed} - wlan: ${wlan} - "
+
+      # only add 'active' devices with 'speed' > 0
+      if [[ ${active} -eq 1 ]] && [[ ${speed} -gt 0 || ${wlan} -eq 0 ]]; then
         if [[ ${guest} -eq 1 ]]; then
           maclist_guest+=(${mac^^}) # add uppercased mac address
           iplist_guest+=(${ipaddr})
+
+          # DEBUG: debug statement
+          #echo "active(GUEST)"
         else
           maclist_normal+=(${mac^^}) # add uppercased mac address
           iplist_normal+=(${ipaddr})
+
+          # DEBUG: debug statement
+          #echo "active(NORMAL)"
         fi
       fi
 
-      # reset variables
       name=""
       ipaddr=""
       mac=""
       guest=0
+      wlan=0
+      speed=0
       active=0
     fi
   done <<< "${devices}"
