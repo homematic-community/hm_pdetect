@@ -22,6 +22,6 @@ cp -a ../hm_pdetect.sh tmp/common/bin/
 
 # generate archive
 cd tmp
-tar --owner=root --group=root -czvf ../hm_pdetect-$(cat ../../VERSION).tar.gz *
+tar --owner=root --group=root --exclude=.DS_Store -czvf ../hm_pdetect-$(cat ../../VERSION).tar.gz *
 cd ..
 rm -rf tmp
