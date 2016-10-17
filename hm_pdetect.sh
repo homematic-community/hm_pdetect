@@ -23,8 +23,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.0"
-VERSION_DATE="Jun 07 2016"
+VERSION="1.1"
+VERSION_DATE="Oct 17 2016"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -519,8 +519,8 @@ function retrieveFritzBoxDeviceList()
       # DEBUG: output name+speed+active for debugging purposes
       #echo -n "${name}: ${active} @ ${speed} - wlan: ${wlan} - "
 
-      # only add 'active' devices with 'speed' > 0
-      if [[ ${active} -eq 1 ]] && [[ ${speed} -gt 0 || ${wlan} -eq 0 ]]; then
+      # only add 'active' devices
+      if [[ ${active} -eq 1 ]]; then
         if [[ ${guest} -eq 1 ]]; then
           maclist_guest+=(${mac^^}) # add uppercased mac address
           iplist_guest+=(${ipaddr})
@@ -536,6 +536,7 @@ function retrieveFritzBoxDeviceList()
         fi
       fi
 
+      # reset variables
       name=""
       ipaddr=""
       mac=""
