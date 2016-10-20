@@ -469,8 +469,18 @@ function retrieveFritzBoxDeviceList()
     return ${RETURN_FAILURE}
   fi
 
-  # uncomment for debugging purposes
-  #echo ${devices}
+  # now we prepare the 'devices' variable to have all
+  # parameters on separate lines
+  # (some FRITZ!OS versions put everything on one line)
+  devices="${devices//[\{/$'\n'[\{$'\n'}"
+  devices="${devices//\},{/$'\n'\},{$'\n'}"
+  devices="${devices//\}]/$'\n'\}]}"
+  devices="${devices//\",/\",$'\n'}"
+  devices=$(echo "${devices}" | grep '[^[:blank:]]')
+
+  # DEBUG: uncomment for debugging purposes
+  #echo
+  #echo "${devices}"
 
   # the SID succeeded so lets make this SID the
   # new currently valid SID of this ip
@@ -497,11 +507,46 @@ function retrieveFritzBoxDeviceList()
   local speed=0
   local active=0
 
-  # parse the query.lua output
+  # parse the query.lua output line by line
   while read -r line; do
 
-    # extract name
-    if [[ $line =~ $re_name ]]; then
+    # we collect data until we find a '}' character in one line
+    # which should signal that we have parsed all parameters of a device
+    if [[ $line =~ .*}.* ]]; then
+      if [[ -n $ipaddr ]]; then
+        # DEBUG: output name+speed+active for debugging purposes
+        #echo -n "${name}: ${active} @ ${speed} - wlan: ${wlan} - "
+
+        # only add 'active' devices
+        if [[ ${active} -eq 1 ]]; then
+          if [[ ${guest} -eq 1 ]]; then
+            maclist_guest+=(${mac^^}) # add uppercased mac address
+            iplist_guest+=(${ipaddr})
+
+            # DEBUG: debug statement
+            #echo "active(GUEST)"
+          else
+            maclist_normal+=(${mac^^}) # add uppercased mac address
+            iplist_normal+=(${ipaddr})
+
+            # DEBUG: debug statement
+            #echo "active(NORMAL)"
+          fi
+        #else
+          # DEBUG: debug statement
+          #echo "NOT ACTIVE"
+        fi
+
+        # reset variables
+        name=""
+        ipaddr=""
+        mac=""
+        guest=0
+        wlan=0
+        speed=0
+        active=0
+      fi
+    elif [[ $line =~ $re_name ]]; then
       name="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_ip ]]; then
       ipaddr="${BASH_REMATCH[1]}"
@@ -515,35 +560,6 @@ function retrieveFritzBoxDeviceList()
       speed="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_active ]]; then
       active="${BASH_REMATCH[1]}"
-
-      # DEBUG: output name+speed+active for debugging purposes
-      #echo -n "${name}: ${active} @ ${speed} - wlan: ${wlan} - "
-
-      # only add 'active' devices
-      if [[ ${active} -eq 1 ]]; then
-        if [[ ${guest} -eq 1 ]]; then
-          maclist_guest+=(${mac^^}) # add uppercased mac address
-          iplist_guest+=(${ipaddr})
-
-          # DEBUG: debug statement
-          #echo "active(GUEST)"
-        else
-          maclist_normal+=(${mac^^}) # add uppercased mac address
-          iplist_normal+=(${ipaddr})
-
-          # DEBUG: debug statement
-          #echo "active(NORMAL)"
-        fi
-      fi
-
-      # reset variables
-      name=""
-      ipaddr=""
-      mac=""
-      guest=0
-      wlan=0
-      speed=0
-      active=0
     fi
   done <<< "${devices}"
 
