@@ -1,2 +1,3 @@
 *.swp
 /hm_pdetect.conf
+.DS_Store
