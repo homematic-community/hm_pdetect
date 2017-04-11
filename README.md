@@ -1,8 +1,10 @@
 ## FRITZ!-based Presence Detection for HomeMatic - hm_pdetect
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RAQSDY9YNZVCL)
+[![Release](https://img.shields.io/github/release/jens-maus/hm_pdetect.svg)](https://github.com/jens-maus/hm_pdetect/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/jens-maus/hm_pdetect/latest/total.svg)](https://github.com/jens-maus/hm_pdetect/releases/latest)
+[![Issues](https://img.shields.io/github/issues/jens-maus/hm_pdetect.svg)](https://github.com/jens-maus/hm_pdetect/issues)
 [![License](http://img.shields.io/:license-lgpl3-blue.svg?style=flat)](http://www.gnu.org/licenses/lgpl-3.0.html)
-[![Github Issues](http://githubbadges.herokuapp.com/jens-maus/hm_pdetect/issues.svg)](https://github.com/jens-maus/hm_pdetect/issues)
+[![Donate](https://img.shields.io/badge/donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RAQSDY9YNZVCL)
 
 This CCU-Addon allows to implement a general home presence detection system within a [eQ3 HomeMatic](http://www.homematic.com/) homeautomation system. It regularly queries the WiFi/LAN status of user devices (e.g. Smartphones) logging in/out of [AVM FRITZ!](http://www.avm.de/) WiFi routers (e.g. FRITZ!Box, FRITZ!Repeater). Upon manually configured MAC and IP addresses of user devices this addon is able to set the general home presence status of that user in terms of setting CCU-based system variables. These variables can then be evaluated within the general HomeMatic home automation system. In addition, any device that is not recognized as a configured user devices or known device will otherwise be considered a guest device and a separate system variable set accordingly. This allows to identify any guests being present at the house so that e.g. the heating system of a guest room could be switched on/off accordingly.
 
