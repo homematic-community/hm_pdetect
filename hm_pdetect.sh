@@ -23,8 +23,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.1"
-VERSION_DATE="Oct 17 2016"
+VERSION="1.3"
+VERSION_DATE="Aug 30 2017"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -225,7 +225,7 @@ function getVariableState()
 {
   local name="$1"
 
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State()")
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
     if [[ ${result} != "null" ]]; then
@@ -259,7 +259,7 @@ function setVariableState()
 
   # the variable should be set to a new state, so lets do it
   echo -n "  Setting CCU variable '${name}': '${newstate//\'}'... "
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject('${name}').State(${newstate})")
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
   else
@@ -291,7 +291,7 @@ function createVariable()
   # we are expecting
   local postbody=""
   if [[ ${vatype} == "enum" ]]; then
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueList=dom.GetObject('${vaname}').ValueList()")
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
     if [[ ${result} =~ \<valueList\>(.*)\</valueList\> ]]; then
       result="${BASH_REMATCH[1]}"
     fi
@@ -300,7 +300,7 @@ function createVariable()
     if [[ -n ${result} && ${result} != "null" ]]; then
       if [[ ${result} != ${valist} ]]; then
         echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
-        postbody="string v='${vaname}';dom.GetObject(v).ValueList('${valist}')"
+        postbody="string v='${vaname}';dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueList('${valist}')"
       fi
     else
       echo -n "  Creating CCU variable '${vaname}' (${vatype})... "
@@ -313,7 +313,7 @@ function createVariable()
       postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('${comment}');n.State('');dom.RTUpdate(false);}"
     fi
   else
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueName0=dom.GetObject('${vaname}').ValueName0()&valueName1=dom.GetObject('${vaname}').ValueName1()")
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
     local valueName0="null"
     local valueName1="null"
     if [[ ${result} =~ \<valueName0\>(.*)\</valueName0\>\<valueName1\>(.*)\</valueName1\> ]]; then
@@ -328,7 +328,7 @@ function createVariable()
        if [[ ${valueName0} != ${HM_CCU_PRESENCE_AWAY} || \
              ${valueName1} != ${HM_CCU_PRESENCE_PRESENT} ]]; then
          echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
-         postbody="string v='${vaname}';dom.GetObject(v).ValueName0('${HM_CCU_PRESENCE_AWAY}');dom.GetObject(v).ValueName1('${HM_CCU_PRESENCE_PRESENT}')"
+         postbody="string v='${vaname}';dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueName0('${HM_CCU_PRESENCE_AWAY}');dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueName1('${HM_CCU_PRESENCE_PRESENT}')"
        fi
     else
       echo -n "  Creating CCU variable '${vaname}' (${vatype})... "
