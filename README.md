@@ -76,7 +76,7 @@ This CCU-Addon allows to implement a general home presence detection system with
 8. If you want to automatically start hm_pdetect on system startup a startup script
 
 ## Using 'system.Exec()'
-Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using the `system.Exec() command within HomeMatic scripts on the CCU following the following syntax:
+Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using the `system.Exec()` command within HomeMatic scripts on the CCU following the following syntax:
 
         system.Exec("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime> &");
  
