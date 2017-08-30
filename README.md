@@ -75,14 +75,14 @@ This CCU-Addon allows to implement a general home presence detection system with
 
 8. If you want to automatically start hm_pdetect on system startup a startup script
 
-## CUxD SystemExec use
-Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using a CUxD (www.cuxd.de) SystemExec call within HomeMatic scripts on the CCU following the following syntax:
+## Using 'system.Exec()'
+Instead of automatically calling hm_pdetect on a predefined interval one can also trigger its execution using the `system.Exec() command within HomeMatic scripts on the CCU following the following syntax:
 
-        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime> &");
+        system.Exec("/usr/local/addons/hm_pdetect/run.sh <iterations> <waittime> &");
  
 Please note the &lt;iterations&gt; and &lt;waittime&gt; which allows to additionally specify how many times hm_pdetect should be executed with a certain amount of wait time in between. One example of such an execution can be:
 
-        dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("/usr/local/addons/hm_pdetect/run.sh 5 2 &");
+        system.Exec("/usr/local/addons/hm_pdetect/run.sh 5 2 &");
 
 This will execute hm_pdetect for a total amount of 5 times with a waittime of 2 seconds between each execution.
 
@@ -93,7 +93,7 @@ In case of problems/bugs or if you have any feature requests please feel free to
 The use and development of this addon is based on version 3 of the LGPL open source license.
 
 ## Authors
-Copyright (c) 2015-2016 Jens Maus &lt;mail@jens-maus.de&gt;
+Copyright (c) 2015-2017 Jens Maus &lt;mail@jens-maus.de&gt;
 
 ## Notice
 This Addon uses KnowHow that was developed throughout the following projects:
