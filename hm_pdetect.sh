@@ -14,7 +14,7 @@
 # guest device and the script will set a presence system variable for guests in the
 # CCU as well.
 #
-# Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>
+# Copyright (C) 2015-2017 Jens Maus <mail@jens-maus.de>
 #
 # This script is based on similar functionality and combines the functionality of
 # these projects into a single script:
@@ -874,7 +874,7 @@ function run_pdetect()
 # main processing starts here
 #
 echo "hm_pdetect ${VERSION} - a FRITZ!-based HomeMatic presence detection script"
-echo "(${VERSION_DATE}) Copyright (C) 2015-2016 Jens Maus <mail@jens-maus.de>"
+echo "(${VERSION_DATE}) Copyright (C) 2015-2017 Jens Maus <mail@jens-maus.de>"
 echo
 
 # lets enter an endless loop to implement a
