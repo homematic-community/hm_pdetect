@@ -64,4 +64,4 @@ sync
 
 # exit with 0 to signal install succeeded and no reboot
 # is required
-exit 0
+exit 10
