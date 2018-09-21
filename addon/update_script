@@ -61,3 +61,7 @@ if [ -s /usr/local/crontabs/root ]; then
 fi
 
 sync
+
+# exit with 0 to signal install succeeded and no reboot
+# is required
+exit 0
