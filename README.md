@@ -24,9 +24,9 @@ This CCU-Addon allows to implement a general home presence detection system with
 * Web based configuration pages accessible via CCU-WebUI
 
 ## Supported CCU models
+* [HomeMatic CCU3](https://www.eq-3.de/produkte/homematic/zentralen-und-gateways/smart-home-zentrale-ccu3.html) /[RaspberryMatic](http://raspberrymatic.de/)
+* [HomeMatic CCU2](https://www.eq-3.de/produkt-detail-zentralen-und-gateways/items/homematic-zentrale-ccu-2.html)
 * HomeMatic CCU1
-* [HomeMatic CCU2](http://www.eq-3.de/produkt-detail-zentralen-und-gateways/items/homematic-zentrale-ccu-2.html)
-* [RaspberryMatic](http://homematic-forum.de/forum/viewtopic.php?f=56&t=26917)
 
 ## Supported FRITZ! models
 * All models of FRITZ!Box and FRITZ!Repeater running with FRITZ!OS 6 or newer
