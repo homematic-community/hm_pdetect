@@ -14,7 +14,7 @@
 # guest device and the script will set a presence system variable for guests in the
 # CCU as well.
 #
-# Copyright (C) 2015-2017 Jens Maus <mail@jens-maus.de>
+# Copyright (C) 2015-2018 Jens Maus <mail@jens-maus.de>
 #
 # This script is based on similar functionality and combines the functionality of
 # these projects into a single script:
@@ -23,8 +23,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.3"
-VERSION_DATE="Aug 30 2017"
+VERSION="1.5"
+VERSION_DATE="Nov 26 2018"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -38,7 +38,10 @@ USERVARS=$(set -o posix; set | grep "HM_.*=" 2>/dev/null)
 HM_FRITZ_IP=${HM_FRITZ_IP:-"fritz.box fritz.repeater"}
 
 # IP address/hostname of CCU2
-HM_CCU_IP=${HM_CCU_IP:-"homematic-ccu2.fritz.box"}
+HM_CCU_IP=${HM_CCU_IP:-"homematic-raspi.fritz.box"}
+
+# Port settings for ReGa communications
+HM_CCU_REGAPORT=${HM_CCU_REGAPORT:-"8181"}
 
 # Name of the CCU variable prefix used
 HM_CCU_PRESENCE_VAR=${HM_CCU_PRESENCE_VAR:-"Anwesenheit"}
@@ -225,7 +228,7 @@ function getVariableState()
 {
   local name="$1"
 
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
     if [[ ${result} != "null" ]]; then
@@ -259,7 +262,7 @@ function setVariableState()
 
   # the variable should be set to a new state, so lets do it
   echo -n "  Setting CCU variable '${name}': '${newstate//\'}'... "
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
+  local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
   else
@@ -291,7 +294,7 @@ function createVariable()
   # we are expecting
   local postbody=""
   if [[ ${vatype} == "enum" ]]; then
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
     if [[ ${result} =~ \<valueList\>(.*)\</valueList\> ]]; then
       result="${BASH_REMATCH[1]}"
     fi
@@ -313,7 +316,7 @@ function createVariable()
       postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('${comment}');n.State('');dom.RTUpdate(false);}"
     fi
   else
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:8181/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
+    local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
     local valueName0="null"
     local valueName1="null"
     if [[ ${result} =~ \<valueName0\>(.*)\</valueName0\>\<valueName1\>(.*)\</valueName1\> ]]; then
@@ -343,7 +346,7 @@ function createVariable()
   fi
 
   # use wget to post the tcl script to tclrega.exe
-  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:8181/tclrega.exe")
+  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/tclrega.exe")
   if [[ ${result} =~ \<v\>${vaname}\</v\> ]]; then
     echo "ok."
     return ${RETURN_SUCCESS}

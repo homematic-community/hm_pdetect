@@ -11,6 +11,12 @@ start() {
   export HM_PROCESSLOG_FILE="/var/log/hm_pdetect.log"
   export CONFIG_FILE="${ADDONDIR}/etc/hm_pdetect.conf"
 
+  # check for new+missing options in conf file and add them
+  # if necessary
+  if ! grep -q HM_CCU_REGAPORT ${ADDONDIR}/etc/hm_pdetect.conf; then
+    echo "HM_CCU_REGAPORT=8183" >>${ADDONDIR}/etc/hm_pdetect.conf
+  fi
+
   # set path settings to let it search in the bin directory as well.
   export PATH="${ADDONDIR}/bin:${PATH}"
 
@@ -48,7 +54,7 @@ case "$1" in
 
   info)
     echo "Info: <b>FRITZ!-based Presence Detection Addon</b><br>"
-    echo "Info: (c) 2015-2016 Jens Maus<br>"
+    echo "Info: (c) 2015-2018 Jens Maus<br>"
     echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
     echo "Version: $(cat ${WWWDIR}/VERSION)"
     echo "Name: hm_pdetect"

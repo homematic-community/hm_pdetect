@@ -171,6 +171,7 @@ proc saveConfigFile { } {
     
     # we set config options that should not be changeable on the CCU
     puts $fd "HM_CCU_IP=127.0.0.1"
+    puts $fd "HM_CCU_REGAPORT=8183"
     puts $fd "HM_PROCESSLOG_FILE=\"/var/log/hm_pdetect.log\""
     puts $fd "HM_DAEMON_PIDFILE=\"/var/run/hm_pdetect.pid\""
 
