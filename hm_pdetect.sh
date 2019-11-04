@@ -14,7 +14,7 @@
 # guest device and the script will set a presence system variable for guests in the
 # CCU as well.
 #
-# Copyright (C) 2015-2018 Jens Maus <mail@jens-maus.de>
+# Copyright (C) 2015-2019 Jens Maus <mail@jens-maus.de>
 #
 # This script is based on similar functionality and combines the functionality of
 # these projects into a single script:
@@ -23,8 +23,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.5"
-VERSION_DATE="Nov 26 2018"
+VERSION="1.6"
+VERSION_DATE="Nov 04 2019"
 
 #####################################################
 # Main script starts here, don't modify from here on

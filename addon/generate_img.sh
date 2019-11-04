@@ -14,7 +14,8 @@ cp -a www tmp/
 cp -a ../VERSION tmp/www/
 cp -a ccu1 tmp/
 cp -a ccu2 tmp/
-cp -a ccurm tmp/
+cp -a ccu3 tmp/
+cp -a ccu3x86 tmp/
 
 # copy hm_pdetect main script + config
 mkdir -p tmp/common/bin

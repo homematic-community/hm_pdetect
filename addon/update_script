@@ -33,7 +33,11 @@ if [ "$1" = "" ]; then
 elif [ "$1" = "CCU2" ]; then
   cp -af ccu2/* ${ADDON_DIR}/
 elif [ "$1" == "HM-RASPBERRYMATIC" ]; then
-  cp -af ccurm/* ${ADDON_DIR}/
+  if [ "$(uname -m)" == "i686" ] || [ "$(uname -m)" == "x86_64" ]; then
+    cp -af ccu3x86/* ${ADDON_DIR}/
+  else
+    cp -af ccu3/* ${ADDON_DIR}/
+  fi
 fi
 
 # copy startup script
