@@ -44,4 +44,5 @@ fi
 
 # execute hm_pdetect in non-daemon mode
 export PATH="${ADDON_DIR}/bin:${PATH}"
+export LD_LIBRARY_PATH="${ADDON_DIR}/bin:${LD_LIBRARY_PATH}"
 ${ADDON_DIR}/bin/hm_pdetect.sh >/dev/null 2>&1

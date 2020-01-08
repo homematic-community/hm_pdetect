@@ -19,6 +19,7 @@ start() {
 
   # set path settings to let it search in the bin directory as well.
   export PATH="${ADDONDIR}/bin:${PATH}"
+  export LD_LIBRARY_PATH="${ADDONDIR}/bin:${LD_LIBRARY_PATH}"
 
   # run hm_pdetect in daemon mode
   ${ADDONDIR}/bin/hm_pdetect.sh start >/dev/null 2>&1
@@ -31,6 +32,7 @@ stop() {
 
   # set path settings to let it search in the bin directory as well.
   export PATH="${ADDONDIR}/bin:${PATH}"
+  export LD_LIBRARY_PATH="${ADDONDIR}/bin:${LD_LIBRARY_PATH}"
 
   # stop/kill hm_pdetect
   ${ADDONDIR}/bin/hm_pdetect.sh stop >/dev/null 2>&1
@@ -54,7 +56,7 @@ case "$1" in
 
   info)
     echo "Info: <b>FRITZ!-based Presence Detection Addon</b><br>"
-    echo "Info: (c) 2015-2018 Jens Maus<br>"
+    echo "Info: (c) 2015-2020 Jens Maus<br>"
     echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
     echo "Version: $(cat ${WWWDIR}/VERSION)"
     echo "Name: hm_pdetect"
