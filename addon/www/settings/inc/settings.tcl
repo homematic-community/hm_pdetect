@@ -62,8 +62,9 @@ proc loadFile { fileName } {
     set content ""
     set fd -1
     
-    set fd [ open $fileName r]
-    if { $fd > -1 } {
+    if { [catch {open $fileName r} fd] } {
+        set content ""
+    } else {
         set content [read $fd]
         close $fd
     }
