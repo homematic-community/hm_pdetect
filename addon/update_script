@@ -6,6 +6,11 @@ ADDON_DIR=/usr/local/addons/${ADDONNAME}
 RCD_DIR=${CONFIG_DIR}/rc.d
 WWW_DIR=${CONFIG_DIR}/addons/www/${ADDONNAME}
 
+# check for unsupported platforms
+if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
+  exit 13
+fi
+
 # mount /usr/local if not already mounted
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then

@@ -5,6 +5,11 @@ ADDONDIR=/usr/local/addons/${ADDONNAME}
 WWWDIR=/usr/local/etc/config/addons/www/${ADDONNAME}
 RCDDIR=/usr/local/etc/config/rc.d
 
+# check for unsupported platforms
+if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
+  exit 13
+fi
+
 # function that starts hm_pdetect as a daemon
 start() {
   # default settings (will be overwritten by config file)
