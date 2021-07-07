@@ -61,8 +61,8 @@ case "$1" in
 
   info)
     echo "Info: <b>FRITZ!-based Presence Detection Addon</b><br>"
-    echo "Info: (c) 2015-2020 Jens Maus<br>"
-    echo "Info: <a href='http://github.com/jens-maus/hm_pdetect'>http://github.com/jens-maus/hm_pdetect</a>"
+    echo "Info: (c) 2015-2021 Jens Maus<br>"
+    echo "Info: <a href='https://github.com/homematic-community/hm_pdetect'>https://github.com/homematic-community/hm_pdetect</a>"
     echo "Version: $(cat ${WWWDIR}/VERSION)"
     echo "Name: hm_pdetect"
     echo "Operations: uninstall restart"

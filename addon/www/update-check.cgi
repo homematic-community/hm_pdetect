@@ -1,7 +1,7 @@
 #!/bin/tclsh
 
-set checkURL    "https://raw.githubusercontent.com/jens-maus/hm_pdetect/master/VERSION"
-set downloadURL "https://github.com/jens-maus/hm_pdetect/releases/latest"
+set checkURL    "https://raw.githubusercontent.com/homematic-community/hm_pdetect/master/VERSION"
+set downloadURL "https://github.com/homematic-community/hm_pdetect/releases/latest"
 
 catch {
   set input $env(QUERY_STRING)
