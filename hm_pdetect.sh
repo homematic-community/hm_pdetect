@@ -522,7 +522,7 @@ function retrieveFritzBoxDeviceList()
 
         # only add 'active' devices
         if [[ ${active} -eq 1 ]]; then
-          if [[ ${guest} -eq 1 ]]; then
+          if [[ ${guest} -eq 1 ]] || [[ ${ipaddr} == 192.168.179.* ]]; then
             maclist_guest+=(${mac^^}) # add uppercased mac address
             iplist_guest+=(${ipaddr})
 
