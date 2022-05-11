@@ -17,7 +17,7 @@ proc url-decode str {
     regsub -all {(%[0-9A-Fa-f0-9]{2})+} $str {[utf8 \0]} str
 
     # process \u unicode mapped chars and trim whitespaces
-    return [string trim [subst -novar  $str]]
+    return [encoding convertfrom identity [string trim [subst -novar $str]]]
 }
 
 proc str-escape str {
@@ -62,7 +62,7 @@ proc loadFile { fileName } {
     set content ""
     set fd -1
     
-    if { [catch {open $fileName r} fd] } {
+    if { ![file exist $fileName] || [catch {open $fileName r} fd] } {
         set content ""
     } else {
         set content [read $fd]
@@ -75,7 +75,12 @@ proc loadFile { fileName } {
 proc loadConfigFile { } {
     global FILENAME HM_FRITZ_IP HM_FRITZ_USER HM_FRITZ_SECRET HM_CCU_PRESENCE_VAR HM_CCU_PRESENCE_LIST HM_CCU_PRESENCE_LIST_ENABLED HM_CCU_PRESENCE_STR HM_CCU_PRESENCE_STR_ENABLED HM_CCU_PRESENCE_GUEST HM_CCU_PRESENCE_GUEST_ENABLED HM_CCU_PRESENCE_NOBODY HM_CCU_PRESENCE_USER HM_CCU_PRESENCE_USER_ENABLED HM_CCU_PRESENCE_PRESENT HM_CCU_PRESENCE_AWAY HM_USER_LIST HM_KNOWN_LIST_MODE HM_KNOWN_LIST HM_INTERVAL_TIME
     set conf ""
-    catch {set conf [loadFile $FILENAME]}
+
+    if { [encoding system] != "identity" } {
+        catch {set conf [encoding convertto utf-8 [loadFile $FILENAME]]}
+    } else {
+        catch {set conf [loadFile $FILENAME]}
+    }
 
     if { [string trim "$conf"] != "" } {
         set HM_INTERVAL_MAX 0

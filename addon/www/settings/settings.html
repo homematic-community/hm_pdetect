@@ -1,7 +1,7 @@
 <html lang="de">
 <head>
-	<meta charset="ISO-8859-1">
-	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="settings">
@@ -30,7 +30,7 @@
       </div>
    <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav ">
-        <li><a href="../index.html">Über</a></li>
+        <li><a href="../index.html">Ãœber</a></li>
         <li><a href="logoutput.cgi">Logfile</a></li>
         <li class="active"><a href="settings.cgi">Konfiguration</a></li>
       </ul>
@@ -69,30 +69,30 @@
 </div>
 <!-- Text area-->
 <div class="form-group">
-  <label class="col-md-3 control-label" for="HM_USER_LIST" id="HM_USER_LIST-Label">Eineindeutige Nutzergeräte<br>(MAC/IP-Liste):</label>
+  <label class="col-md-3 control-label" for="HM_USER_LIST" id="HM_USER_LIST-Label">Eineindeutige NutzergerÃ¤te<br>(MAC/IP-Liste):</label>
   <div class="col-md-8">
     <textarea id="HM_USER_LIST" name="HM_USER_LIST" type="text" rows="4" placeholder="z.B. [John]=AA:BB:CC:DD:EE:FF [Jane]='192.168.178.10 192.168.178.20'" class="form-control input-md"><%HM_USER_LIST%></textarea>
-    <span class="help-block">Standardwert: leer (keine Nutzergeräte konfiguriert)</span>  
+    <span class="help-block">Standardwert: leer (keine NutzergerÃ¤te konfiguriert)</span>  
   </div>
 </div>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-3 control-label" for="HM_KNOWN_LIST" id="HM_KNOWN_LIST-Label">Bekannte WLAN/LAN-Geräte<br>(MAC/IP-Liste):</label>  
+  <label class="col-md-3 control-label" for="HM_KNOWN_LIST" id="HM_KNOWN_LIST-Label">Bekannte WLAN/LAN-GerÃ¤te<br>(MAC/IP-Liste):</label>  
   <div class="col-md-8">
     <textarea id="HM_KNOWN_LIST" name="HM_KNOWN_LIST" type="text" rows="4" placeholder="z.B. 'AA:BB:CC:DD:EE:FF 192.168.178.30'" class="form-control input-md"><%HM_KNOWN_LIST%></textarea>
     <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE1" name="HM_KNOWN_LIST_MODE" type="radio" value="guest" <%HM_KNOWN_LIST_MODE1%>>auf Gast-WLAN anwenden</label>
     <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE2" name="HM_KNOWN_LIST_MODE" type="radio" value="all" <%HM_KNOWN_LIST_MODE2%>>auf gesamtes WLAN/LAN anwenden</label>
     <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE3" name="HM_KNOWN_LIST_MODE" type="radio" value="off" <%HM_KNOWN_LIST_MODE3%>>Gast-Erkennung deaktiviert</label>
-    <span class="help-block">Standardwert: leer (alle unbekannten Geräte im gewählten WLAN/LAN werden als Gastgeräte identifiziert)</span>
+    <span class="help-block">Standardwert: leer (alle unbekannten GerÃ¤te im gewÃ¤hlten WLAN/LAN werden als GastgerÃ¤te identifiziert)</span>
   </div>
 </div>
 <br>
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-3 control-label" for="HM_INTERVAL_TIME" id="HM_INTERVAL_TIME-Label">Automatische Ausführung:</label>  
+  <label class="col-md-3 control-label" for="HM_INTERVAL_TIME" id="HM_INTERVAL_TIME-Label">Automatische AusfÃ¼hrung:</label>  
   <div class="col-md-8">
     <input id="HM_INTERVAL_TIME" name="HM_INTERVAL_TIME" type="text" style="width:100%" data-slider-min="0" data-slider-max="1800" data-slider-step="5" data-slider-value="<%HM_INTERVAL_TIME%>" data-slider-enabled="true"/>
-    <span class="help-block">Standardwert: 15s (Ausführung alle 15 Sekunden)</span>
+    <span class="help-block">Standardwert: 15s (AusfÃ¼hrung alle 15 Sekunden)</span>
   </div>
 </div>
 <!-- Separator-->
