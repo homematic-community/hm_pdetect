@@ -9,6 +9,7 @@ catch {
   foreach pair $pairs {
     if {$pair == "cmd=download"} {
       set cmd "download"
+      break
     }
   }
 }
