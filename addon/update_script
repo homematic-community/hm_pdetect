@@ -12,7 +12,7 @@ if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
 fi
 
 # mount /usr/local if not already mounted
-mount | grep /usr/local 2>&1 >/dev/null
+mount | grep /usr/local >/dev/null 2>&1
 if [ $? -eq 1 ]; then
   mount /usr/local
 fi
@@ -37,8 +37,8 @@ if [ "$1" = "" ]; then
   cp -af ccu1/* ${ADDON_DIR}/
 elif [ "$1" = "CCU2" ]; then
   cp -af ccu2/* ${ADDON_DIR}/
-elif [ "$1" == "HM-RASPBERRYMATIC" ]; then
-  if [ "$(uname -m)" == "i686" ] || [ "$(uname -m)" == "x86_64" ]; then
+elif [ "$1" = "HM-RASPBERRYMATIC" ]; then
+  if [ "$(uname -m)" = "i686" ] || [ "$(uname -m)" = "x86_64" ]; then
     cp -af ccu3x86/* ${ADDON_DIR}/
   else
     cp -af ccu3/* ${ADDON_DIR}/
@@ -61,7 +61,7 @@ ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/hm_pdetect-addon.cfg
 # make sure to remove any hm_pdetect cronjobs
 # since this is not required since 0.8+ anymore
 if [ -s /usr/local/crontabs/root ]; then
-  cat /usr/local/crontabs/root | grep -v "${ADDON_DIR}/run.sh" | sort | uniq >/tmp/crontab.$$
+  grep -v "${ADDON_DIR}/run.sh" /usr/local/crontabs/root | sort | uniq >/tmp/crontab.$$
   # we make sure we don't overwrite with an empty file
   # because on the CCU2+RaspberryMatic it should never be empty!
   if [ -s /tmp/crontab.$$ ]; then

@@ -29,9 +29,9 @@ export CONFIG_FILE="${ADDON_DIR}/etc/hm_pdetect.conf"
 
 # the interval settings can be specified on the command-line
 if [ $# -gt 0 ]; then
-  export HM_INTERVAL_MAX=${1}
+  export HM_INTERVAL_MAX="${1}"
   if [ $# -gt 1 ]; then
-    export HM_INTERVAL_TIME=${2}
+    export HM_INTERVAL_TIME="${2}"
   else
     export HM_INTERVAL_TIME=15
   fi

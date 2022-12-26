@@ -22,8 +22,8 @@ mkdir -p tmp/common/bin
 cp -a ../hm_pdetect.sh tmp/common/bin/
 
 # generate archive
-cd tmp
-find . -not -name '.DS_Store' -not -name '*.sha256' -type f -print0 | xargs -0 sha256sum >hm_pdetect-$(cat ../../VERSION).sha256
-tar --owner=root --group=root --exclude=.DS_Store -czvf ../hm_pdetect-$(cat ../../VERSION).tar.gz *
+cd tmp || exit
+find . -not -name '.DS_Store' -not -name '*.sha256' -type f -print0 | xargs -0 sha256sum >hm_pdetect-"$(cat ../../VERSION)".sha256
+tar --owner=root --group=root --exclude=.DS_Store -czvf ../hm_pdetect-"$(cat ../../VERSION)".tar.gz -- *
 cd ..
 rm -rf tmp

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090
 #
 # A FRITZ!-based HomeMatic presence detection script which can be regularly
 # executed (e.g. via cron on a separate Linux system) and remotely queries a FRITZ!
@@ -14,7 +15,7 @@
 # guest device and the script will set a presence system variable for guests in the
 # CCU as well.
 #
-# Copyright (C) 2015-2022 Jens Maus <mail@jens-maus.de>
+# Copyright (C) 2015-2023 Jens Maus <mail@jens-maus.de>
 #
 # This script is based on similar functionality and combines the functionality of
 # these projects into a single script:
@@ -23,8 +24,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.11"
-VERSION_DATE="June 17 2022"
+VERSION="1.12"
+VERSION_DATE="Dec 26 2022"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -96,7 +97,7 @@ HM_PROCESSLOG_MAXLINES=${HM_PROCESSLOG_MAXLINES:-500}
 
 # the config file path
 # (default: 'hm_pdetect.conf' in path where hm_pdetect.sh script resists)
-CONFIG_FILE=${CONFIG_FILE:-"$(cd "${0%/*}"; pwd)/hm_pdetect.conf"}
+CONFIG_FILE=${CONFIG_FILE:-"$(realpath "$(dirname "${BASH_SOURCE[0]}")")/hm_pdetect.conf"}
 
 # global return status variables
 RETURN_FAILURE=1
@@ -109,7 +110,7 @@ RETURN_SUCCESS=0
 #
 
 # bash check
-if [[ $(echo ${BASH_VERSION} | cut -d. -f1) -lt 4 ]]; then
+if [[ ${BASH_VERSINFO[0]} -lt 4 ]]; then
   echo "ERROR: this script requires a bash shell of version 4 or higher. Please install."
   exit ${RETURN_FAILURE}
 fi
@@ -155,24 +156,22 @@ fi
 
 # lets source the config file a first time
 if [[ -n ${CONFIG_FILE} ]]; then
-  source "${CONFIG_FILE}"
-  if [[ $? -ne 0 ]]; then
+  if ! source "${CONFIG_FILE}"; then
     echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
     exit ${RETURN_FAILURE}
   fi
 
   # lets eval the user overridden variables
   # so that they take priority
-  eval ${USERVARS}
+  eval "${USERVARS}"
 fi
 
 ###############################
 # run hm_pdetect as a real daemon by using setsid
 # to fork and deattach it from a terminal.
-PROCESS_MODE=normal
 if [[ ${#} -gt 0 ]]; then
   FILE=${0##*/}
-  DIR=$(cd "${0%/*}"; pwd)
+  DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
   # lets check the supplied command
   case "${1}" in
@@ -188,7 +187,7 @@ if [[ ${#} -gt 0 ]]; then
       umask 0
       echo
       echo "Starting hm_pdetect in daemon mode."
-      exec setsid ${DIR}/${FILE} daemon "${CONFIG_FILE}" </dev/null >/dev/null 2>/dev/null &
+      exec setsid "${DIR}/${FILE}" daemon "${CONFIG_FILE}" </dev/null >/dev/null 2>/dev/null &
       exit 0
     ;;
 
@@ -197,23 +196,20 @@ if [[ ${#} -gt 0 ]]; then
       # save the PID number in the specified PIDFILE so that we 
       # can kill it later on using this file
       if [[ -n ${HM_DAEMON_PIDFILE} ]]; then
-        echo $$ >${HM_DAEMON_PIDFILE}
+        echo $$ >"${HM_DAEMON_PIDFILE}"
       fi
 
       # if we end up here we are in daemon mode and
       # can continue normally but make sure we don't allow any
       # input
       exec 0</dev/null
-
-      # make sure PROCESS_MODE is set to daemon
-      PROCESS_MODE=daemon
     ;;
 
     stop) # 4. stop the daemon if requested
       if [[ -f ${HM_DAEMON_PIDFILE} ]]; then
-        echo "Stopping hm_pdetect (pid: $(cat ${HM_DAEMON_PIDFILE}))"
-        kill $(cat ${HM_DAEMON_PIDFILE}) >/dev/null 2>&1
-        rm -f ${HM_DAEMON_PIDFILE} >/dev/null 2>&1
+        echo "Stopping hm_pdetect (pid: $(cat "${HM_DAEMON_PIDFILE}"))"
+        kill "$(cat "${HM_DAEMON_PIDFILE}")" >/dev/null 2>&1
+        rm -f "${HM_DAEMON_PIDFILE}" >/dev/null 2>&1
       fi
       exit 0
     ;;
@@ -227,17 +223,17 @@ fi
 function getVariableState()
 {
   local name="$1"
-
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
+  local result=""
+  result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
     if [[ ${result} != "null" ]]; then
-      echo ${result}
+      echo "${result}"
       return ${RETURN_SUCCESS}
     fi
   fi
 
-  echo ${result}
+  echo "${result}"
   return ${RETURN_FAILURE}
 }
 
@@ -256,13 +252,14 @@ function setVariableState()
   fi
 
   # only continue if the current state is different to the new state
-  if [[ ${curstate} == ${newstate//\'} ]]; then
+  if [[ ${curstate} == "${newstate//\'}" ]]; then
     return ${RETURN_SUCCESS}
   fi
 
   # the variable should be set to a new state, so lets do it
   echo -n "  Setting CCU variable '${name}': '${newstate//\'}'... "
-  local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
+  local result=""
+  result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
   else
@@ -294,14 +291,15 @@ function createVariable()
   # we are expecting
   local postbody=""
   if [[ ${vatype} == "enum" ]]; then
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
+    local result=""
+    result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
     if [[ ${result} =~ \<valueList\>(.*)\</valueList\> ]]; then
       result="${BASH_REMATCH[1]}"
     fi
 
     # make sure result is not empty and not null
     if [[ -n ${result} && ${result} != "null" ]]; then
-      if [[ ${result} != ${valist} ]]; then
+      if [[ ${result} != "${valist}" ]]; then
         echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
         postbody="string v='${vaname}';dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueList('${valist}')"
       fi
@@ -316,7 +314,8 @@ function createVariable()
       postbody="string v='${vaname}';boolean f=true;string i;foreach(i,dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()){if(v==dom.GetObject(i).Name()){f=false;}};if(f){object s=dom.GetObject(ID_SYSTEM_VARIABLES);object n=dom.CreateObject(OT_VARDP);n.Name(v);s.Add(n.ID());n.ValueType(ivtString);n.ValueSubType(istChar8859);n.DPInfo('${comment}');n.State('');dom.RTUpdate(false);}"
     fi
   else
-    local result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
+    local result=""
+    result=$(wget -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
     local valueName0="null"
     local valueName1="null"
     if [[ ${result} =~ \<valueName0\>(.*)\</valueName0\>\<valueName1\>(.*)\</valueName1\> ]]; then
@@ -328,8 +327,8 @@ function createVariable()
     if [[ -n ${result} && \
           ${valueName0} != "null" && ${valueName1} != "null" ]]; then
 
-       if [[ ${valueName0} != ${HM_CCU_PRESENCE_AWAY} || \
-             ${valueName1} != ${HM_CCU_PRESENCE_PRESENT} ]]; then
+       if [[ ${valueName0} != "${HM_CCU_PRESENCE_AWAY}" || \
+             ${valueName1} != "${HM_CCU_PRESENCE_PRESENT}" ]]; then
          echo -n "  Modifying CCU variable '${vaname}' (${vatype})... "
          postbody="string v='${vaname}';dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueName0('${HM_CCU_PRESENCE_AWAY}');dom.GetObject(ID_SYSTEM_VARIABLES).Get(v).ValueName1('${HM_CCU_PRESENCE_PRESENT}')"
        fi
@@ -346,7 +345,8 @@ function createVariable()
   fi
 
   # use wget to post the tcl script to tclrega.exe
-  local result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/tclrega.exe")
+  local result=""
+  result=$(wget -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/tclrega.exe")
   if [[ ${result} =~ \<v\>${vaname}\</v\> ]]; then
     echo "ok."
     return ${RETURN_SUCCESS}
@@ -362,7 +362,8 @@ function getSessionID()
   local uri=$1
 
   # retrieve login challenge
-  local challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua")
+  local challenge=""
+  challenge=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua")
   if [[ ${challenge} =~ \<Challenge\>(.*)\</Challenge\> ]]; then
     challenge="${BASH_REMATCH[1]}"
   else
@@ -378,12 +379,14 @@ function getSessionID()
 
   # process login and hash it with our password
   local cpstr="${challenge}-${secret}"
-  local md5=$(echo -n ${cpstr} | iconv -f ISO8859-1 -t UTF-16LE | md5sum -b | cut -d' ' -f1)
+  local md5=""
+  md5=$(echo -n "${cpstr}" | iconv -f ISO8859-1 -t UTF-16LE | md5sum -b | cut -d' ' -f1)
   local response="${challenge}-${md5}"
   local url_params="username=${user}&response=${response}"
   
   # send login request and retrieve SID
-  local sid=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}")
+  local sid=""
+  sid=$(wget -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}")
   if [[ ${sid} =~ \<SID\>(.*)\</SID\> ]]; then
     sid="${BASH_REMATCH[1]}"
   else
@@ -397,7 +400,7 @@ function getSessionID()
     return ${RETURN_FAILURE}
   fi
 
-  echo ${sid}
+  echo "${sid}"
   return ${RETURN_SUCCESS}
 }
 
@@ -449,19 +452,18 @@ function retrieveFritzBoxDeviceList()
   local res=1
   local sid=${sidStorage[${ip}]}
   if [[ -n ${sid} ]]; then
-    devices=$(getDeviceList "${uri}" ${sid})
+    devices=$(getDeviceList "${uri}" "${sid}")
     res=$?
   fi
   if [[ ${res} -ne 0 || -z ${devices} ]]; then
     # the first iteration with the sid of the
     # last iteration didn't work out so lets
     # generate a new one
-    sid=$(getSessionID "${uri}")
-    if [[ $? -ne 0 ]]; then
+    if ! sid=$(getSessionID "${uri}"); then
       echo "${sid}"
       return ${RETURN_FAILURE}
     fi
-    devices=$(getDeviceList "${uri}" ${sid})
+    devices=$(getDeviceList "${uri}" "${sid}")
     res=$?
   fi
 
@@ -494,8 +496,8 @@ function retrieveFritzBoxDeviceList()
   local re_ip="\"ip\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_mac="\"mac\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_guest="\"guest\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  local re_wlan="\"wlan\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-  local re_speed="\"speed\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  #local re_wlan="\"wlan\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  #local re_speed="\"speed\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   local re_active="\"active\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
 
   local maclist_normal=()
@@ -506,8 +508,8 @@ function retrieveFritzBoxDeviceList()
   local ipaddr=""
   local mac=""
   local guest=0
-  local wlan=0
-  local speed=0
+  #local wlan=0
+  #local speed=0
   local active=0
 
   # parse the query.lua output line by line
@@ -523,14 +525,14 @@ function retrieveFritzBoxDeviceList()
         # only add 'active' devices
         if [[ ${active} -eq 1 ]]; then
           if [[ ${guest} -eq 1 ]] || [[ ${ipaddr} == 192.168.179.* ]]; then
-            maclist_guest+=(${mac^^}) # add uppercased mac address
-            iplist_guest+=(${ipaddr})
+            maclist_guest+=("${mac^^}") # add uppercased mac address
+            iplist_guest+=("${ipaddr}")
 
             # DEBUG: debug statement
             #echo "active(GUEST)"
           else
-            maclist_normal+=(${mac^^}) # add uppercased mac address
-            iplist_normal+=(${ipaddr})
+            maclist_normal+=("${mac^^}") # add uppercased mac address
+            iplist_normal+=("${ipaddr}")
 
             # DEBUG: debug statement
             #echo "active(NORMAL)"
@@ -545,8 +547,8 @@ function retrieveFritzBoxDeviceList()
         ipaddr=""
         mac=""
         guest=0
-        wlan=0
-        speed=0
+        #wlan=0
+        #speed=0
         active=0
       fi
     elif [[ $line =~ $re_name ]]; then
@@ -557,10 +559,10 @@ function retrieveFritzBoxDeviceList()
       mac="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_guest ]]; then
       guest="${BASH_REMATCH[1]}"
-    elif [[ $line =~ $re_wlan ]]; then
-      wlan="${BASH_REMATCH[1]}"
-    elif [[ $line =~ $re_speed ]]; then
-      speed="${BASH_REMATCH[1]}"
+    #elif [[ $line =~ $re_wlan ]]; then
+    #  wlan="${BASH_REMATCH[1]}"
+    #elif [[ $line =~ $re_speed ]]; then
+    #  speed="${BASH_REMATCH[1]}"
     elif [[ $line =~ $re_active ]]; then
       active="${BASH_REMATCH[1]}"
     fi
@@ -591,15 +593,17 @@ function createUserTupleList()
   local b=""
   local i=0
   IFS=';'
+  # shellcheck disable=SC2034
   for Y in ${a}; do
     ((i = i + 1))
-    b=$b{$i,}
+    b="$b{$i,}"
   done
   IFS=' '
 
   # lets apply the brace expansion string and sort it
   # according to numbers and not have it in the standard sorting
-  local c=$(for X in $(eval echo\ $b); do echo $X; done | sort -n | tr '\n' ' ')
+  local c=""
+  c=$(for X in $(eval echo\ $b); do echo "${X}"; done | sort -n | tr '\n' ' ')
 
   # lets construct tupels for every number (1-9) in
   # the brace expansion
@@ -608,7 +612,7 @@ function createUserTupleList()
     if [[ -n ${tuples} ]]; then
       tuples="${tuples};"
     fi
-    folded=$(echo -n ${X} | fold -w1 | tr '\n' ',')
+    folded=$(echo -n "${X}" | fold -w1 | tr '\n' ',')
     tuples="${tuples}${folded}"
   done
 
@@ -652,7 +656,7 @@ function whichEnumID()
   local i=0
   local result=0
   for id in ${enumList}; do
-    if [[ ${presenceList} == ${id} ]]; then
+    if [[ ${presenceList} == "${id}" ]]; then
       result=$i
       break
     fi
@@ -672,10 +676,9 @@ function run_pdetect()
   # active devices in our network
   echo -n "Querying FRITZ! devices:"
   i=0
-  for ip in ${HM_FRITZ_IP[@]}; do
+  for ip in "${HM_FRITZ_IP[@]}"; do
     echo -n " ${ip}"
-    retrieveFritzBoxDeviceList ${ip} "${HM_FRITZ_USER}" "${HM_FRITZ_SECRET}"
-    if [[ $? -eq 0 ]]; then
+    if retrieveFritzBoxDeviceList "${ip}" "${HM_FRITZ_USER}" "${HM_FRITZ_SECRET}"; then
       ((i = i + 1))
     fi
   done
@@ -699,13 +702,13 @@ function run_pdetect()
     stat="false"
   
     # prepare the device list of the user as a regex
-    userDeviceList=$(echo ${HM_USER_LIST[${user}]} | tr ' ' '|')
+    userDeviceList=$(echo "${HM_USER_LIST[${user}]}" | tr ' ' '|')
 
     # match MAC address and IP address in normal and guest WiFi/LAN
-    if [[ ${normalDeviceList[@]}  =~ ${userDeviceList^^} || \
-          ${guestDeviceList[@]}   =~ ${userDeviceList^^} || \
-          ${!normalDeviceList[@]} =~ ${userDeviceList^^} || \
-          ${!guestDeviceList[@]}  =~ ${userDeviceList^^} ]]; then
+    if [[ ${normalDeviceList[*]}  =~ ${userDeviceList^^} || \
+          ${guestDeviceList[*]}   =~ ${userDeviceList^^} || \
+          ${!normalDeviceList[*]} =~ ${userDeviceList^^} || \
+          ${!guestDeviceList[*]}  =~ ${userDeviceList^^} ]]; then
       stat="true"
     fi
   
@@ -723,23 +726,23 @@ function run_pdetect()
     # they are not recognized as guest devices
     for device in ${HM_USER_LIST[${user}]}; do
       # try to match MAC address first
-      if [[ ${!normalDeviceList[@]} =~ ${device^^} ]]; then
-        unset normalDeviceList[${device^^}]
-      elif [[ ${!guestDeviceList[@]} =~ ${device^^} ]]; then
-        unset guestDeviceList[${device^^}]
+      if [[ ${!normalDeviceList[*]} =~ ${device^^} ]]; then
+        unset "normalDeviceList[${device^^}]"
+      elif [[ ${!guestDeviceList[*]} =~ ${device^^} ]]; then
+        unset "guestDeviceList[${device^^}]"
       else
         # now match the IP address list instead
-        if [[ ${normalDeviceList[@]} =~ ${device^^} ]]; then
-          for dev in ${!normalDeviceList[@]}; do
-            if [[ ${normalDeviceList[${dev}]} == ${device^^} ]]; then
-              unset normalDeviceList[${dev}]
+        if [[ ${normalDeviceList[*]} =~ ${device^^} ]]; then
+          for dev in "${!normalDeviceList[@]}"; do
+            if [[ ${normalDeviceList[${dev}]} == "${device^^}" ]]; then
+              unset "normalDeviceList[${dev}]"
               break
             fi
           done
-        elif [[ ${guestDeviceList[@]} =~ ${device^^} ]]; then
-          for dev in ${!guestDeviceList[@]}; do
-            if [[ ${guestDeviceList[${dev}]} == ${device^^} ]]; then
-              unset guestDeviceList[${dev}]
+        elif [[ ${guestDeviceList[*]} =~ ${device^^} ]]; then
+          for dev in "${!guestDeviceList[@]}"; do
+            if [[ ${guestDeviceList[${dev}]} == "${device^^}" ]]; then
+              unset "guestDeviceList[${dev}]"
               break
             fi
           done
@@ -765,27 +768,27 @@ function run_pdetect()
   
   # lets identify guests by checking the normal and guest
   # WiFi/LAN device list and comparing them to the HM_KNOWN_LIST
-  HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
-  for device in ${HM_KNOWN_LIST[@]}; do
+  HM_KNOWN_LIST=( "${HM_KNOWN_LIST[@]^^}" ) # uppercase array
+  for device in "${HM_KNOWN_LIST[@]}"; do
   
     # try to match MAC address first
-    if [[ ${!normalDeviceList[@]} =~ ${device} ]]; then
-      unset normalDeviceList[${device}]
-    elif [[ ${!guestDeviceList[@]} =~ ${device} ]]; then
-      unset guestDeviceList[${device}]
+    if [[ ${!normalDeviceList[*]} =~ ${device} ]]; then
+      unset "normalDeviceList[${device}]"
+    elif [[ ${!guestDeviceList[*]} =~ ${device} ]]; then
+      unset "guestDeviceList[${device}]"
     else
       # now match the IP address list instead
-      if [[ ${normalDeviceList[@]} =~ ${device} ]]; then
-        for dev in ${!normalDeviceList[@]}; do
-          if [[ ${normalDeviceList[${dev}]} == ${device} ]]; then
-            unset normalDeviceList[${dev}]
+      if [[ ${normalDeviceList[*]} =~ ${device} ]]; then
+        for dev in "${!normalDeviceList[@]}"; do
+          if [[ ${normalDeviceList[${dev}]} == "${device}" ]]; then
+            unset "normalDeviceList[${dev}]"
             break
           fi
         done
-      elif [[ ${guestDeviceList[@]} =~ ${device} ]]; then
-        for dev in ${!guestDeviceList[@]}; do
-          if [[ ${guestDeviceList[${dev}]} == ${device} ]]; then
-            unset guestDeviceList[${dev}]
+      elif [[ ${guestDeviceList[*]} =~ ${device} ]]; then
+        for dev in "${!guestDeviceList[@]}"; do
+          if [[ ${guestDeviceList[${dev}]} == "${device}" ]]; then
+            unset "guestDeviceList[${dev}]"
             break
           fi
         done
@@ -799,12 +802,12 @@ function run_pdetect()
   # just from the guestDeviceList
   guestList=()
   if [[ ${HM_KNOWN_LIST_MODE} != "guest" ]]; then
-    for device in ${!normalDeviceList[@]}; do
-      guestList+=(${device})
+    for device in "${!normalDeviceList[@]}"; do
+      guestList+=("${device}")
     done
   fi
-  for device in ${!guestDeviceList[@]}; do
-    guestList+=(${device})
+  for device in "${!guestDeviceList[@]}"; do
+    guestList+=("${device}")
   done
   
   echo "Checking guest presence: "
@@ -814,7 +817,7 @@ function run_pdetect()
   if [[ ${HM_KNOWN_LIST_MODE} != "off" ]]; then
     if [[ ${#guestList[@]} -gt 0 ]]; then
       # set status in homematic CCU
-      echo "present - ${#guestList[@]} (${guestList[@]})"
+      echo "present - ${#guestList[@]} (${guestList[*]})"
       createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" bool "${HM_CCU_PRESENCE_GUEST} @ home"
       setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_GUEST}" true
       if [[ -n ${presenceList} ]]; then
@@ -843,7 +846,7 @@ function run_pdetect()
     done
     userTupleList=$(createUserTupleList "${userList}")
     createVariable "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}" enum "presence enum list @ home" "${userTupleList}"
-    setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}" $(whichEnumID "${userTupleList}" "${presenceList}")
+    setVariableState "${HM_CCU_PRESENCE_VAR}.${HM_CCU_PRESENCE_LIST}" "$(whichEnumID "${userTupleList}" "${presenceList}")"
   fi
   
   # we create and set a global presence variable as a string
@@ -877,7 +880,7 @@ function run_pdetect()
 # main processing starts here
 #
 echo "hm_pdetect ${VERSION} - a FRITZ!-based HomeMatic presence detection script"
-echo "(${VERSION_DATE}) Copyright (C) 2015-2017 Jens Maus <mail@jens-maus.de>"
+echo "(${VERSION_DATE}) Copyright (C) 2015-2023 Jens Maus <mail@jens-maus.de>"
 echo
 
 # lets enter an endless loop to implement a
@@ -888,15 +891,14 @@ while true; do
 
   # lets source the config file again
   if [[ -n ${CONFIG_FILE} ]]; then
-    source "${CONFIG_FILE}"
-    if [[ $? -ne 0 ]]; then
+    if ! source "${CONFIG_FILE}"; then
       echo "ERROR: couldn't source config file '${CONFIG_FILE}'. Please check config file syntax."
       result=${RETURN_FAILURE}
     fi
 
     # lets eval the user overridden variables
     # so that they take priority
-    eval ${USERVARS}
+    eval "${USERVARS}"
   fi
 
   # lets wait until the next execution round in case
@@ -906,7 +908,7 @@ while true; do
     if [[ -n ${HM_INTERVAL_TIME}    && \
           ${HM_INTERVAL_TIME} -gt 0 && \
           ( -z ${HM_INTERVAL_MAX} || ${HM_INTERVAL_MAX} -eq 0 || ${iteration} -lt ${HM_INTERVAL_MAX} ) ]]; then
-      sleep ${HM_INTERVAL_TIME}
+      sleep "${HM_INTERVAL_TIME}"
       if [[ $? -eq 1 ]]; then
         result=${RETURN_FAILURE}
         break
@@ -921,7 +923,7 @@ while true; do
   if [[ -n ${HM_PROCESSLOG_FILE} ]]; then
     output=$(run_pdetect)
     result=$?
-    echo "${output}" | cat - ${HM_PROCESSLOG_FILE} | head -n ${HM_PROCESSLOG_MAXLINES} >/tmp/hm_pdetect-$$.tmp && mv /tmp/hm_pdetect-$$.tmp ${HM_PROCESSLOG_FILE}
+    echo "${output}" | cat - "${HM_PROCESSLOG_FILE}" | head -n "${HM_PROCESSLOG_MAXLINES}" >/tmp/hm_pdetect-$$.tmp && mv /tmp/hm_pdetect-$$.tmp "${HM_PROCESSLOG_FILE}"
   else
     # run pdetect with normal stdout processing
     run_pdetect
