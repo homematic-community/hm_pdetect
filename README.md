@@ -93,7 +93,7 @@ In case of problems/bugs or if you have any feature requests please feel free to
 The use and development of this addon is based on version 3 of the LGPL open source license.
 
 ## Authors
-Copyright (c) 2015-2019 Jens Maus &lt;mail@jens-maus.de&gt;
+Copyright (c) 2015-2023 Jens Maus &lt;mail@jens-maus.de&gt;
 
 ## Notice
 This Addon uses KnowHow that was developed throughout the following projects:
