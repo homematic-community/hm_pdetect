@@ -62,6 +62,9 @@ HM_CCU_PRESENCE_NOBODY=${HM_CCU_PRESENCE_NOBODY:-"Niemand"}
 HM_CCU_PRESENCE_PRESENT=${HM_CCU_PRESENCE_PRESENT:-"anwesend"}
 HM_CCU_PRESENCE_AWAY=${HM_CCU_PRESENCE_AWAY:-"abwesend"}
 
+# guest IP range in case device is not recognized by "guest" status
+HM_CCU_PRESENCE_GUEST_IPRANGE=${HM_CCU_PRESENCE_GUEST_IPRANGE:-"192.168.179.*"}
+
 # Specify mode of HM_KNOWN_LIST variable setting
 #
 # guest - apply known ignore list to devices in a dedicated
@@ -530,7 +533,7 @@ function retrieveFritzBoxDeviceList()
 
         # only add 'active' devices
         if [[ ${active} -eq 1 ]]; then
-          if [[ ${guest} -eq 1 ]] || [[ ${ipaddr} == 192.168.179.* ]]; then
+          if [[ ${guest} -eq 1 ]] || [[ ${ipaddr} =~ ${HM_CCU_PRESENCE_GUEST_IPRANGE} ]]; then
             maclist_guest+=("${mac^^}") # add uppercased mac address
             iplist_guest+=("${ipaddr}")
 
