@@ -137,7 +137,6 @@ fi
 declare -A HM_USER_LIST     # username<>MAC/IP tuple
 declare -A normalDeviceList # MAC<>IP tuple (normal-WiFi/LAN)
 declare -A guestDeviceList  # MAC<>IP tuple (guest-WiFi/LAN)
-declare -A sidStorage       # IP<>SID tuple
 
 ###############################
 # lets check if config file was specified as a cmdline arg
@@ -450,7 +449,10 @@ function retrieveFritzBoxDeviceList()
   # having to parse HTML portions. we first try this with our
   local devices=
   local res=1
-  local sid=${sidStorage[${ip}]}
+  local sid=""
+
+  # get a previously existing session id and try that first
+  sid=$(cat "/tmp/hm_pdetect-${ip}.sid" 2>/dev/null)
   if [[ -n ${sid} ]]; then
     devices=$(getDeviceList "${uri}" "${sid}")
     res=$?
@@ -460,11 +462,19 @@ function retrieveFritzBoxDeviceList()
     # last iteration didn't work out so lets
     # generate a new one
     if ! sid=$(getSessionID "${uri}"); then
-      echo "${sid}"
       return ${RETURN_FAILURE}
     fi
-    devices=$(getDeviceList "${uri}" "${sid}")
-    res=$?
+
+    # try to retrieve the device list again
+    if devices=$(getDeviceList "${uri}" "${sid}"); then
+      # the SID succeeded so lets make this SID the
+      # new currently valid SID of this ip
+      (umask 077; echo -n "${sid}" >"/tmp/hm_pdetect-${ip}.sid")
+      echo -n " (fresh login)"
+      res=0
+    else
+      res=1
+    fi
   fi
 
   # perform a last check
@@ -486,10 +496,6 @@ function retrieveFritzBoxDeviceList()
   # DEBUG: uncomment for debugging purposes
   #echo
   #echo "${devices}"
-
-  # the SID succeeded so lets make this SID the
-  # new currently valid SID of this ip
-  sidStorage[${ip}]=${sid}
 
   # prepare the regular expressions
   local re_name="\"name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
