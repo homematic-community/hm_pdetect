@@ -49,6 +49,7 @@ fi
 cp -af rc.d/* ${RCD_DIR}
 
 # copy www stuff
+rm -r ${ADDON_DIR}/www
 cp -af www ${ADDON_DIR}/
 if [ ! -e ${WWW_DIR} ]; then
   ln -sf ${ADDON_DIR}/www ${WWW_DIR}

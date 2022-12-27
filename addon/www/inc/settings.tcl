@@ -47,8 +47,12 @@ proc parseQuery { } {
     global args env
     
     set query [array names env]
-    if { [info exists env(QUERY_STRING)] } {
+    if { [info exists env(REQUEST_METHOD)] } {
+      if { $env(REQUEST_METHOD) == "POST" } {
+        set query [gets stdin]
+      } else {
         set query $env(QUERY_STRING)
+      }
     }
     
     foreach item [split $query &] {

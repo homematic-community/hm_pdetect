@@ -59,5 +59,4 @@ if {[string equal "false" $HM_CCU_PRESENCE_USER_ENABLED]} {
 }
 regsub -all {<%HM_CCU_PRESENCE_USER_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_USER_ENABLED] content
 
-puts "Content-Type: text/html; charset=utf-8\n\n"
 puts $content
