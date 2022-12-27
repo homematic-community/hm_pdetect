@@ -1,8 +1,8 @@
 ## FRITZ!-based Presence Detection for HomeMatic - hm_pdetect
 
-[![Release](https://img.shields.io/github/release/jens-maus/hm_pdetect.svg)](https://github.com/jens-maus/hm_pdetect/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/jens-maus/hm_pdetect/latest/total.svg)](https://github.com/jens-maus/hm_pdetect/releases/latest)
-[![Issues](https://img.shields.io/github/issues/jens-maus/hm_pdetect.svg)](https://github.com/jens-maus/hm_pdetect/issues)
+[![Release](https://img.shields.io/github/release/homematic-community/hm_pdetect.svg)](https://github.com/homematic-community/hm_pdetect/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/homematic-community/hm_pdetect/latest/total.svg)](https://github.com/homematic-community/hm_pdetect/releases/latest)
+[![Issues](https://img.shields.io/github/issues/homematic-community/hm_pdetect.svg)](https://github.com/homematic-community/hm_pdetect/issues)
 [![License](http://img.shields.io/:license-lgpl3-blue.svg?style=flat)](http://www.gnu.org/licenses/lgpl-3.0.html)
 [![Donate](https://img.shields.io/badge/donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RAQSDY9YNZVCL)
 
@@ -39,7 +39,7 @@ This CCU-Addon allows to implement a general home presence detection system with
   * Modify login setting to *Login with FRITZ!Box-Username and Password*
 
 ## Installation as CCU Addon
-1. Download of recent Addon-Release from [Github](https://github.com/jens-maus/hm_pdetect/releases)
+1. Download of recent Addon-Release from [Github](https://github.com/homematic-community/hm_pdetect/releases)
 2. Installation of Addon archive (```hm_pdetect-X.X.tar.gz```) via WebUI interface of CCU device
 3. Configuration of FRITZ!Box/Repeater (see next section)
 4. Configuration of Addon using the WebUI accessible config pages
@@ -55,11 +55,11 @@ This CCU-Addon allows to implement a general home presence detection system with
 
 3. Download latest hm_pdetect.sh:
 
-        wget https://github.com/jens-maus/hm_pdetect/raw/master/hm_pdetect.sh
+        wget https://github.com/homematic-community/hm_pdetect/raw/master/hm_pdetect.sh
 
 4. Download of sample config:
 
-        wget https://github.com/jens-maus/hm_pdetect/raw/master/hm_pdetect.conf.sample
+        wget https://github.com/homematic-community/hm_pdetect/raw/master/hm_pdetect.conf.sample
 
 5. Rename sample config to active one:
 
@@ -87,7 +87,7 @@ Please note the &lt;iterations&gt; and &lt;waittime&gt; which allows to addition
 This will execute hm_pdetect for a total amount of 5 times with a waittime of 2 seconds between each execution.
 
 ## Support
-In case of problems/bugs or if you have any feature requests please feel free to open a [new ticket](https://github.com/jens-maus/hm_pdetect/issues) at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: [hm_pdetect](http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907).
+In case of problems/bugs or if you have any feature requests please feel free to open a [new ticket](https://github.com/homematic-community/hm_pdetect/issues) at the Github project pages. To seek for help for configuring/using this Addon please use the following german language based fora thread: [hm_pdetect](http://homematic-forum.de/forum/viewtopic.php?f=18&t=23907).
 
 ## License
 The use and development of this addon is based on version 3 of the LGPL open source license.
