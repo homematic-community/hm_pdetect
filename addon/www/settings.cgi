@@ -20,6 +20,7 @@ if {[info exists sid] && [check_session $sid]} {
     set args(HM_CCU_PRESENCE_STR_ENABLED) ""
     set args(HM_CCU_PRESENCE_GUEST) ""
     set args(HM_CCU_PRESENCE_GUEST_ENABLED) ""
+    set args(HM_CCU_PRESENCE_GUEST_IPRANGE) ""
     set args(HM_CCU_PRESENCE_NOBODY) ""
     set args(HM_CCU_PRESENCE_USER) ""
     set args(HM_CCU_PRESENCE_USER_ENABLED) ""
@@ -48,6 +49,7 @@ if {[info exists sid] && [check_session $sid]} {
   set HM_CCU_PRESENCE_STR_ENABLED ""
   set HM_CCU_PRESENCE_GUEST ""
   set HM_CCU_PRESENCE_GUEST_ENABLED ""
+  set HM_CCU_PRESENCE_GUEST_IPRANGE ""
   set HM_CCU_PRESENCE_NOBODY ""
   set HM_CCU_PRESENCE_USER ""
   set HM_CCU_PRESENCE_USER_ENABLED ""
@@ -147,6 +149,14 @@ if {[info exists sid] && [check_session $sid]} {
         <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE2" name="HM_KNOWN_LIST_MODE" type="radio" value="all" <%HM_KNOWN_LIST_MODE2%>>auf gesamtes WLAN/LAN anwenden</label>
         <label class="radio-inline"><input id="HM_KNOWN_LIST_MODE3" name="HM_KNOWN_LIST_MODE" type="radio" value="off" <%HM_KNOWN_LIST_MODE3%>>Gast-Erkennung deaktiviert</label>
         <span class="help-block">Standardwert: leer (alle unbekannten Geräte im gewählten WLAN/LAN werden als Gastgeräte identifiziert)</span>
+      </div>
+    </div>
+    <!-- Text input-->
+    <div class="form-group">
+      <label class="col-md-3 control-label" for="HM_CCU_PRESENCE_GUEST_IPRANGE" id="HM_CCU_PRESENCE_GUEST_IPRANGE-Label">Gastnetzwerk:</label>
+      <div class="col-md-4">
+        <input id="HM_CCU_PRESENCE_GUEST_IPRANGE" name="HM_CCU_PRESENCE_GUEST_IPRANGE" type="text" placeholder="z.B. '192.168.179.*'" class="form-control input-md" value="<%HM_CCU_PRESENCE_GUEST_IPRANGE%>">
+        <span class="help-block">Standardwert: '192.168.179.*'</span>
       </div>
     </div>
     <br>

@@ -51,6 +51,7 @@ if {[string equal "false" $HM_CCU_PRESENCE_GUEST_ENABLED]} {
   set HM_CCU_PRESENCE_GUEST_ENABLED "checked"
 }
 regsub -all {<%HM_CCU_PRESENCE_GUEST_ENABLED%>} $content [string trim $HM_CCU_PRESENCE_GUEST_ENABLED] content
+regsub -all {<%HM_CCU_PRESENCE_GUEST_IPRANGE%>} $content [string trim $HM_CCU_PRESENCE_GUEST_IPRANGE] content
 
 if {[string equal "false" $HM_CCU_PRESENCE_USER_ENABLED]} {
   set HM_CCU_PRESENCE_USER_ENABLED ""
