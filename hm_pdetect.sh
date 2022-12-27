@@ -24,8 +24,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.12"
-VERSION_DATE="Dec 26 2022"
+VERSION="1.13"
+VERSION_DATE="Dec 27 2022"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -685,7 +685,10 @@ function run_pdetect()
   # active devices in our network
   echo -n "Querying FRITZ! devices:"
   i=0
-  for ip in "${HM_FRITZ_IP[@]}"; do
+  for ip in ${HM_FRITZ_IP}; do
+    if [[ ${i} -gt 0 ]]; then
+      echo -n ","
+    fi
     echo -n " ${ip}"
     if retrieveFritzBoxDeviceList "${ip}" "${HM_FRITZ_USER}" "${HM_FRITZ_SECRET}"; then
       ((i = i + 1))
@@ -706,7 +709,8 @@ function run_pdetect()
   # lets identify user presence
   presenceList=""
   echo "Checking user presence: "
-  for user in "${!HM_USER_LIST[@]}"; do
+  # shellcheck disable=SC2068
+  for user in ${!HM_USER_LIST[@]}; do
     echo -n " ${user}: "
     stat="false"
   
@@ -742,14 +746,14 @@ function run_pdetect()
       else
         # now match the IP address list instead
         if [[ ${normalDeviceList[*]} =~ ${device^^} ]]; then
-          for dev in "${!normalDeviceList[@]}"; do
+          for dev in ${!normalDeviceList[@]}; do
             if [[ ${normalDeviceList[${dev}]} == "${device^^}" ]]; then
               unset "normalDeviceList[${dev}]"
               break
             fi
           done
         elif [[ ${guestDeviceList[*]} =~ ${device^^} ]]; then
-          for dev in "${!guestDeviceList[@]}"; do
+          for dev in ${!guestDeviceList[@]}; do
             if [[ ${guestDeviceList[${dev}]} == "${device^^}" ]]; then
               unset "guestDeviceList[${dev}]"
               break
@@ -777,8 +781,10 @@ function run_pdetect()
   
   # lets identify guests by checking the normal and guest
   # WiFi/LAN device list and comparing them to the HM_KNOWN_LIST
-  HM_KNOWN_LIST=( "${HM_KNOWN_LIST[@]^^}" ) # uppercase array
-  for device in "${HM_KNOWN_LIST[@]}"; do
+  # shellcheck disable=SC2206
+  HM_KNOWN_LIST=( ${HM_KNOWN_LIST[@]^^} ) # uppercase array
+  # shellcheck disable=SC2068
+  for device in ${HM_KNOWN_LIST[@]}; do
   
     # try to match MAC address first
     if [[ ${!normalDeviceList[*]} =~ ${device} ]]; then
@@ -788,14 +794,14 @@ function run_pdetect()
     else
       # now match the IP address list instead
       if [[ ${normalDeviceList[*]} =~ ${device} ]]; then
-        for dev in "${!normalDeviceList[@]}"; do
+        for dev in ${!normalDeviceList[@]}; do
           if [[ ${normalDeviceList[${dev}]} == "${device}" ]]; then
             unset "normalDeviceList[${dev}]"
             break
           fi
         done
       elif [[ ${guestDeviceList[*]} =~ ${device} ]]; then
-        for dev in "${!guestDeviceList[@]}"; do
+        for dev in ${!guestDeviceList[@]}; do
           if [[ ${guestDeviceList[${dev}]} == "${device}" ]]; then
             unset "guestDeviceList[${dev}]"
             break
@@ -811,11 +817,13 @@ function run_pdetect()
   # just from the guestDeviceList
   guestList=()
   if [[ ${HM_KNOWN_LIST_MODE} != "guest" ]]; then
-    for device in "${!normalDeviceList[@]}"; do
+    # shellcheck disable=SC2068
+    for device in ${!normalDeviceList[@]}; do
       guestList+=("${device}")
     done
   fi
-  for device in "${!guestDeviceList[@]}"; do
+  # shellcheck disable=SC2068
+  for device in ${!guestDeviceList[@]}; do
     guestList+=("${device}")
   done
   
@@ -846,7 +854,8 @@ function run_pdetect()
   # enum of all possible presence combinations
   if [[ -n ${HM_CCU_PRESENCE_LIST} && ${HM_CCU_PRESENCE_LIST_ENABLED} == true ]]; then
     userList=""
-    for user in "${!HM_USER_LIST[@]}"; do
+    # shellcheck disable=SC2068
+    for user in ${!HM_USER_LIST[@]}; do
       if [[ -n ${userList} ]]; then
         userList="${userList};${user}"
       else
