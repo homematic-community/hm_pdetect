@@ -5,7 +5,7 @@ HM_FRITZ_USER=
 HM_FRITZ_SECRET=
 
 # IP address/hostname of CCU device (CCU1, CCU2, RaspberryMatic)
-HM_CCU_IP="homematic-ccu2.fritz.box"
+HM_CCU_IP="homematic-raspi.fritz.box"
 
 # used names within variables
 HM_CCU_PRESENCE_USER="Nutzer"
@@ -15,6 +15,9 @@ HM_CCU_PRESENCE_PRESENT="anwesend"
 HM_CCU_PRESENCE_AWAY="abwesend"
 HM_CCU_PRESENCE_LIST="list"
 HM_CCU_PRESENCE_STR="string"
+
+# Regex for IP range of dedicated guest network
+HM_CCU_PRESENCE_GUEST_IPRANGE="192.168.179.*"
 
 # Name of the CCU variable prefix used
 HM_CCU_PRESENCE_VAR="Anwesenheit"
