@@ -24,8 +24,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.13"
-VERSION_DATE="Dec 27 2022"
+VERSION="1.14"
+VERSION_DATE="Dec 28 2022"
 
 #####################################################
 # Main script starts here, don't modify from here on
