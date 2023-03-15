@@ -226,7 +226,7 @@ function getVariableState()
 {
   local name="$1"
   local result=""
-  result=$(wget --timeout=10 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
+  result=$(wget -T 5 -t 1 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').Value()")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
     if [[ ${result} != "null" ]]; then
@@ -261,7 +261,7 @@ function setVariableState()
   # the variable should be set to a new state, so lets do it
   echo -n "  Setting CCU variable '${name}': '${newstate//\'}'... "
   local result=""
-  result=$(wget --timeout=10 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
+  result=$(wget -T 5 -t 1 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?state=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${name}').State(${newstate})")
   if [[ ${result} =~ \<state\>(.*)\</state\> ]]; then
     result="${BASH_REMATCH[1]}"
   else
@@ -294,7 +294,7 @@ function createVariable()
   local postbody=""
   if [[ ${vatype} == "enum" ]]; then
     local result=""
-    result=$(wget --timeout=10 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
+    result=$(wget -T 5 -t 1 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueList=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueList()")
     if [[ ${result} =~ \<valueList\>(.*)\</valueList\> ]]; then
       result="${BASH_REMATCH[1]}"
     fi
@@ -317,7 +317,7 @@ function createVariable()
     fi
   else
     local result=""
-    result=$(wget --timeout=10 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
+    result=$(wget -T 5 -t 1 -q -O - "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/rega.exe?valueName0=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName0()&valueName1=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${vaname}').ValueName1()")
     local valueName0="null"
     local valueName1="null"
     if [[ ${result} =~ \<valueName0\>(.*)\</valueName0\>\<valueName1\>(.*)\</valueName1\> ]]; then
@@ -348,7 +348,7 @@ function createVariable()
 
   # use wget to post the tcl script to tclrega.exe
   local result=""
-  result=$(wget --timeout=10 -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/tclrega.exe")
+  result=$(wget -T 5 -t 1 -q -O - --post-data "${postbody}" "http://${HM_CCU_IP}:${HM_CCU_REGAPORT}/tclrega.exe")
   if [[ ${result} =~ \<v\>${vaname}\</v\> ]]; then
     echo "ok."
     return ${RETURN_SUCCESS}
@@ -365,7 +365,7 @@ function getSessionID()
 
   # retrieve login challenge
   local challenge=""
-  challenge=$(wget --timeout=10 -q -O - --no-check-certificate "${uri}/login_sid.lua")
+  challenge=$(wget -T 5 -t 1 -q -O - --no-check-certificate "${uri}/login_sid.lua")
   if [[ ${challenge} =~ \<Challenge\>(.*)\</Challenge\> ]]; then
     challenge="${BASH_REMATCH[1]}"
   else
@@ -388,7 +388,7 @@ function getSessionID()
   
   # send login request and retrieve SID
   local sid=""
-  sid=$(wget --timeout=10 -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}")
+  sid=$(wget -T 5 -t 1 -q -O - --no-check-certificate "${uri}/login_sid.lua?${url_params}")
   if [[ ${sid} =~ \<SID\>(.*)\</SID\> ]]; then
     sid="${BASH_REMATCH[1]}"
   else
@@ -423,7 +423,7 @@ function getDeviceList()
   # retrieve the network device list from the fritzbox using a
   # specific call to query.lua so that we get our information without
   # having to parse HTML portions.
-  devices=$(wget --timeout=10 -q -O - --max-redirect=0 --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,wlan,speed,active)")
+  devices=$(wget -T 5 -t 1 -q -O - --max-redirect=0 --no-check-certificate "${uri}/query.lua?sid=${sid}&network=landevice:settings/landevice/list(name,ip,mac,guest,wlan,speed,active)")
   if [[ $? -ne 0 || -z ${devices} ]]; then
     return ${RETURN_FAILURE}
   fi
