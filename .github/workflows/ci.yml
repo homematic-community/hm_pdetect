@@ -1,0 +1,30 @@
+# hm_pdetect Continious Integration Check Workflow
+# yamllint disable rule:truthy
+---
+name: CI Build
+
+on:
+  push:
+  pull_request:
+
+# default read-only permission
+permissions:
+  contents: read
+
+jobs:
+  linter:
+    name: Linter Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Check shell scripts
+        uses: ludeeus/action-shellcheck@2.0.0
+
+      - name: Check yaml files
+        uses: frenck/action-yamllint@v1.4
+
+      - name: Check markdown files
+        uses: avto-dev/markdown-lint@v1
