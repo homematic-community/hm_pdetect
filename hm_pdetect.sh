@@ -24,8 +24,8 @@
 # https://github.com/max2play/webinterface
 #
 
-VERSION="1.14"
-VERSION_DATE="Dec 28 2022"
+VERSION="1.15"
+VERSION_DATE="Mar 15 2023"
 
 #####################################################
 # Main script starts here, don't modify from here on
@@ -579,12 +579,16 @@ function retrieveFritzBoxDeviceList()
 
   # modify the global associative array for the normal-WiFi/LAN
   for (( i = 0; i < ${#maclist_normal[@]} ; i++ )); do
-    normalDeviceList[${maclist_normal[$i]}]=${iplist_normal[$i]}
+    if [[ -n "${iplist_normal[$i]}" ]]; then
+      normalDeviceList[${iplist_normal[$i]}]=${maclist_normal[$i]}
+    fi
   done
 
   # modify the global associative array for the guest-WiFi/LAN
   for (( i = 0; i < ${#maclist_guest[@]} ; i++ )); do
-    guestDeviceList[${maclist_guest[$i]}]=${iplist_guest[$i]}
+    if [[ -n "${iplist_guest[$i]}" ]]; then
+      guestDeviceList[${iplist_guest[$i]}]=${maclist_guest[$i]}
+    fi
   done
 
   return ${RETURN_SUCCESS}
@@ -738,13 +742,13 @@ function run_pdetect()
     # remove checked user devices from deviceList so that
     # they are not recognized as guest devices
     for device in ${HM_USER_LIST[${user}]}; do
-      # try to match MAC address first
+      # try to match IP address first
       if [[ ${!normalDeviceList[*]} =~ ${device^^} ]]; then
         unset "normalDeviceList[${device^^}]"
       elif [[ ${!guestDeviceList[*]} =~ ${device^^} ]]; then
         unset "guestDeviceList[${device^^}]"
       else
-        # now match the IP address list instead
+        # now match the MAC address list instead
         if [[ ${normalDeviceList[*]} =~ ${device^^} ]]; then
           for dev in ${!normalDeviceList[@]}; do
             if [[ ${normalDeviceList[${dev}]} == "${device^^}" ]]; then
@@ -786,13 +790,13 @@ function run_pdetect()
   # shellcheck disable=SC2068
   for device in ${HM_KNOWN_LIST[@]}; do
   
-    # try to match MAC address first
+    # try to match IP address first
     if [[ ${!normalDeviceList[*]} =~ ${device} ]]; then
       unset "normalDeviceList[${device}]"
     elif [[ ${!guestDeviceList[*]} =~ ${device} ]]; then
       unset "guestDeviceList[${device}]"
     else
-      # now match the IP address list instead
+      # now match the MAC address list instead
       if [[ ${normalDeviceList[*]} =~ ${device} ]]; then
         for dev in ${!normalDeviceList[@]}; do
           if [[ ${normalDeviceList[${dev}]} == "${device}" ]]; then
