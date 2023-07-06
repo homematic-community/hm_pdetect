@@ -445,6 +445,8 @@ function retrieveFritzBoxDeviceList()
   # identifier or if we have to add it ourself
   if [[ ! ${ip} =~ ^http(s)?:\/\/ ]]; then
     uri="http://${ip}"
+  else
+    ip=$(echo ${ip} | sed -E 's/^http(s)?:\/\///g')
   fi
 
   # retrieve the network device list from the fritzbox using a
